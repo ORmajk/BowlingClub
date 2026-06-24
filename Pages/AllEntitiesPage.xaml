@@ -1,0 +1,126 @@
+﻿<Page x:Class="BowlingClub.Pages.AllEntitiesPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="clr-namespace:BowlingClub.Pages"
+      Title="AllEntitiesPage"
+      Background="#1E1E1E">
+
+    <Grid Margin="10">
+        <DockPanel>
+
+            <!-- Верхняя панель -->
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8" VerticalAlignment="Center">
+                <TextBox x:Name="txtGlobalSearch" Width="300" Margin="0,0,8,0" VerticalAlignment="Center"
+                         ToolTip="Поиск по всем сущностям"/>
+                <Button x:Name="btnRefresh" Content="Обновить" Width="90" Click="RefreshAll_Click" Margin="0,0,8,0"/>
+                <TextBlock x:Name="txtStatus" Foreground="LightGray" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <TabControl x:Name="tabControl" Background="#1E1E1E">
+
+                
+
+                <!-- Дорожки -->
+                <TabItem Header="Дорожки">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="6">
+                            <Button x:Name="btnAddLane" Content="Добавить" Click="AddLane_Click" Margin="0,0,6,0"/>
+                            <Button x:Name="btnEditLane" Content="Редактировать" Click="EditLane_Click" Margin="0,0,6,0"/>
+                            <Button x:Name="btnDeleteLane" Content="Удалить" Click="DeleteLane_Click"/>
+                        </StackPanel>
+                        <DataGrid x:Name="dgLanes" AutoGenerateColumns="False" Margin="6" IsReadOnly="True" SelectionMode="Single">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="60"/>
+                                <DataGridTextColumn Header="Номер" Binding="{Binding LaneNumber}" Width="80"/>
+                                <DataGridTextColumn Header="Тип" Binding="{Binding LaneType.Name}" Width="140"/>
+                                <DataGridTextColumn Header="Статус" Binding="{Binding LaneStatus.Name}" Width="140"/>
+                                <DataGridTextColumn Header="Вместимость" Binding="{Binding Capacity}" Width="100"/>
+                                <DataGridTextColumn Header="Цена/час" Binding="{Binding PricePerHour, StringFormat={}{0:C}}" Width="120"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+
+                <!-- Игры -->
+                <TabItem Header="Игры">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="6">
+                            <Button x:Name="btnAddGame" Content="Добавить" Click="AddGame_Click" Margin="0,0,6,0"/>
+                            <Button x:Name="btnEditGame" Content="Редактировать" Click="EditGame_Click" Margin="0,0,6,0"/>
+                            <Button x:Name="btnDeleteGame" Content="Удалить" Click="DeleteGame_Click"/>
+                        </StackPanel>
+                        <DataGrid x:Name="dgGames" AutoGenerateColumns="False" Margin="6" IsReadOnly="True" SelectionMode="Single">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="60"/>
+                                <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*"/>
+                                <DataGridTextColumn Header="Дорожка" Binding="{Binding Lane.LaneNumber}" Width="100"/>
+                                <DataGridTextColumn Header="Начало" Binding="{Binding StartTime, StringFormat={}{0:g}}" Width="160"/>
+                                <DataGridTextColumn Header="Длительность (мин)" Binding="{Binding DurationMinutes}" Width="120"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+
+                <!-- Инвентарь -->
+                <TabItem Header="Инвентарь">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="6">
+                            <Button x:Name="btnAddInventory" Content="Добавить" Click="AddInventory_Click" Margin="0,0,6,0"/>
+                            <Button x:Name="btnEditInventory" Content="Редактировать" Click="EditInventory_Click" Margin="0,0,6,0"/>
+                            <Button x:Name="btnDeleteInventory" Content="Удалить" Click="DeleteInventory_Click"/>
+                        </StackPanel>
+                        <DataGrid x:Name="dgInventory" AutoGenerateColumns="False" Margin="6" IsReadOnly="True" SelectionMode="Single">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="60"/>
+                                <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*"/>
+                                <DataGridTextColumn Header="Тип" Binding="{Binding Type}" Width="140"/>
+                                <DataGridTextColumn Header="Кол-во" Binding="{Binding Quantity}" Width="100"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+
+                <!-- Клиенты -->
+                <TabItem Header="Клиенты">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="6">
+                            <Button x:Name="btnAddClient" Content="Добавить" Click="AddClient_Click" Margin="0,0,6,0"/>
+                            <Button x:Name="btnEditClient" Content="Редактировать" Click="EditClient_Click" Margin="0,0,6,0"/>
+                            <Button x:Name="btnDeleteClient" Content="Удалить" Click="DeleteClient_Click"/>
+                        </StackPanel>
+                        <DataGrid x:Name="dgClients" AutoGenerateColumns="False" Margin="6" IsReadOnly="True" SelectionMode="Single">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="60"/>
+                                <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="*"/>
+                                <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="200"/>
+                                <DataGridTextColumn Header="Телефон" Binding="{Binding Phone}" Width="140"/>
+                                <DataGridTextColumn Header="Баллы" Binding="{Binding Points}" Width="80"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+
+                <!-- Бронирования -->
+                <TabItem Header="Бронирования">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="6">
+                            <Button x:Name="btnAddBooking" Content="Добавить" Click="AddBooking_Click" Margin="0,0,6,0"/>
+                            <Button x:Name="btnEditBooking" Content="Редактировать" Click="EditBooking_Click" Margin="0,0,6,0"/>
+                            <Button x:Name="btnCancelBooking" Content="Отменить" Click="CancelBooking_Click"/>
+                        </StackPanel>
+                        <DataGrid x:Name="dgBookings" AutoGenerateColumns="False" Margin="6" IsReadOnly="True" SelectionMode="Single">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="60"/>
+                                <DataGridTextColumn Header="Клиент" Binding="{Binding Client.FullName}" Width="200"/>
+                                <DataGridTextColumn Header="Дорожка" Binding="{Binding Lane.LaneNumber}" Width="100"/>
+                                <DataGridTextColumn Header="Начало" Binding="{Binding StartTime, StringFormat={}{0:g}}" Width="160"/>
+                                <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="120"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+
+            </TabControl>
+        </DockPanel>
+    </Grid>
+</Page>

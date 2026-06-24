@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="bd2fbb7bc8cd4da6b3857d9c9f5f4486" Name="Diagram1">
+        <EntityTypeShape EntityType="BowlingClubModel.Awards" Width="1.5" PointX="5.75" PointY="11.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="BowlingClubModel.BookingItems" Width="1.5" PointX="7.5" PointY="1.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="BowlingClubModel.Bookings" Width="1.5" PointX="5.25" PointY="1" IsExpanded="true" />
+        <EntityTypeShape EntityType="BowlingClubModel.Clients" Width="1.5" PointX="3" PointY="5.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="BowlingClubModel.EventRegistrations" Width="1.5" PointX="8.25" PointY="4.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="BowlingClubModel.Events" Width="1.5" PointX="6" PointY="14.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="BowlingClubModel.InventoryItems" Width="1.5" PointX="12" PointY="1" IsExpanded="true" />
+        <EntityTypeShape EntityType="BowlingClubModel.InventoryStatuses" Width="1.5" PointX="9.75" PointY="1.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="BowlingClubModel.Lanes" Width="1.5" PointX="3" PointY="1.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="BowlingClubModel.LaneStatuses" Width="1.5" PointX="0.75" PointY="1.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="BowlingClubModel.LaneTypes" Width="1.5" PointX="0.75" PointY="5.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="BowlingClubModel.sysdiagrams" Width="1.5" PointX="0.75" PointY="8.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="BowlingClubModel.UserActions" Width="1.5" PointX="8" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="BowlingClubModel.UserAwards" Width="1.5" PointX="8" PointY="10.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="BowlingClubModel.Users" Width="1.5" PointX="5.75" PointY="7" IsExpanded="true" />
+        <AssociationConnector Association="BowlingClubModel.FK_UserAwards_Awards" ManuallyRouted="false" />
+        <AssociationConnector Association="BowlingClubModel.FK_BookingItems_Bookings" ManuallyRouted="false" />
+        <AssociationConnector Association="BowlingClubModel.FK_Bookings_Clients" ManuallyRouted="false" />
+        <AssociationConnector Association="BowlingClubModel.FK_Bookings_Lanes" ManuallyRouted="false" />
+        <AssociationConnector Association="BowlingClubModel.FK_EventRegistrations_Clients" ManuallyRouted="false" />
+        <AssociationConnector Association="BowlingClubModel.FK_EventRegistrations_Events" ManuallyRouted="false" />
+        <AssociationConnector Association="BowlingClubModel.FK_InventoryItems_Status" ManuallyRouted="false" />
+        <AssociationConnector Association="BowlingClubModel.FK_Lanes_LaneStatuses" ManuallyRouted="false" />
+        <AssociationConnector Association="BowlingClubModel.FK_Lanes_LaneTypes" ManuallyRouted="false" />
+        <AssociationConnector Association="BowlingClubModel.FK_UserActions_Users" ManuallyRouted="false" />
+        <AssociationConnector Association="BowlingClubModel.FK_UserAwards_Users" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>
