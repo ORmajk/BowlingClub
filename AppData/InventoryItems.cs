@@ -20,6 +20,7 @@ namespace BowlingClub.AppData
         public int StatusId { get; set; }
         public int Quantity { get; set; }
         public System.DateTime CreatedAt { get; set; }
+        public string Name { get; set; }
     
         public virtual InventoryStatuses InventoryStatuses { get; set; }
     }

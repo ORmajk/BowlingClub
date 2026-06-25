@@ -18,6 +18,7 @@ namespace BowlingClub.AppData
         public Lanes()
         {
             this.Bookings = new HashSet<Bookings>();
+            this.Events = new HashSet<Events>();
         }
     
         public int Id { get; set; }
@@ -26,10 +27,13 @@ namespace BowlingClub.AppData
         public int StatusId { get; set; }
         public int Capacity { get; set; }
         public decimal PricePerHour { get; set; }
+        public string Photo { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Bookings> Bookings { get; set; }
         public virtual LaneStatuses LaneStatuses { get; set; }
         public virtual LaneTypes LaneTypes { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Events> Events { get; set; }
     }
 }

@@ -146,6 +146,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Pages\LaneEditPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Pages\Login.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -158,6 +162,9 @@
   <ItemGroup>
     <Compile Include="Pages\AllEntitiesPage.xaml.cs">
       <DependentUpon>AllEntitiesPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\LaneEditPage.xaml.cs">
+      <DependentUpon>LaneEditPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\Login.xaml.cs">
       <DependentUpon>Login.xaml</DependentUpon>
@@ -198,9 +205,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="AppData\Model.Context.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -212,6 +217,9 @@
       <DependentUpon>Model.edmx</DependentUpon>
       <LastGenOutput>Model.cs</LastGenOutput>
     </Content>
+    <Resource Include="images\Tiny_lane.jpg" />
+    <Resource Include="images\Norm_lanes.jpg" />
+    <Resource Include="images\VIP_lane.jpg" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />

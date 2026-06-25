@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Data.Entity;
 
-
 namespace BowlingClub.Pages
 {
     public partial class AllEntitiesPage : Page
@@ -24,50 +23,45 @@ namespace BowlingClub.Pages
 
         private void ConfigurePermissions()
         {
-            // По умолчанию — все отключены
             SetAllCrudEnabled(false, false, false);
 
             if (_currentUser == null) return;
 
-            if (string.Equals(_currentUser.Role, "Admin", StringComparison.OrdinalIgnoreCase))
+            if (_currentUser.Role.Equals("Admin", StringComparison.OrdinalIgnoreCase))
             {
-                SetAllCrudEnabled(canAdd: true, canEdit: true, canDelete: true);
+                SetAllCrudEnabled(true, true, true);
+                return;
             }
-            else if (string.Equals(_currentUser.Role, "Manager", StringComparison.OrdinalIgnoreCase))
+
+            if (_currentUser.Role.Equals("Moderator", StringComparison.OrdinalIgnoreCase) ||
+                _currentUser.Role.Equals("Manager", StringComparison.OrdinalIgnoreCase))
             {
-                SetAllCrudEnabled(canAdd: true, canEdit: true, canDelete: false);
-                // Для бронирований менеджеру можно разрешить отмену, если нужно:
-                btnCancelBooking.IsEnabled = false; // оставить false по требованию; можно поставить true
+                SetAllCrudEnabled(true, true, false);
+                btnCancelBooking.IsEnabled = false;
+                return;
             }
-            else
-            {
-                SetAllCrudEnabled(canAdd: false, canEdit: false, canDelete: false);
-            }
+
+            SetAllCrudEnabled(false, false, false);
         }
 
         private void SetAllCrudEnabled(bool canAdd, bool canEdit, bool canDelete)
         {
-            // Lanes
             btnAddLane.IsEnabled = canAdd;
             btnEditLane.IsEnabled = canEdit;
             btnDeleteLane.IsEnabled = canDelete;
 
-            // Games
             btnAddGame.IsEnabled = canAdd;
             btnEditGame.IsEnabled = canEdit;
             btnDeleteGame.IsEnabled = canDelete;
 
-            // Inventory
             btnAddInventory.IsEnabled = canAdd;
             btnEditInventory.IsEnabled = canEdit;
             btnDeleteInventory.IsEnabled = canDelete;
 
-            // Clients
             btnAddClient.IsEnabled = canAdd;
             btnEditClient.IsEnabled = canEdit;
             btnDeleteClient.IsEnabled = canDelete;
 
-            // Bookings
             btnAddBooking.IsEnabled = canAdd;
             btnEditBooking.IsEnabled = canEdit;
             btnCancelBooking.IsEnabled = canDelete;
@@ -85,274 +79,224 @@ namespace BowlingClub.Pages
 
         private void RefreshAll_Click(object sender, RoutedEventArgs e) => LoadAll();
 
-        #region Load methods
-        private void LoadLanes()
-        {
+        private void LoadLanes() =>
             dgLanes.ItemsSource = _db.GetLanes(txtGlobalSearch.Text).ToList();
-        }
 
-        private void LoadGames()
-        {
-            //dgGames.ItemsSource = _db.GetGames(txtGlobalSearch.Text).ToList();
-        }
+        private void LoadGames() =>
+            dgGames.ItemsSource = _db.GetEvents(txtGlobalSearch.Text).ToList();
 
-        private void LoadInventory()
-        {
+        private void LoadInventory() =>
             dgInventory.ItemsSource = _db.GetInventoryItems(txtGlobalSearch.Text).ToList();
-        }
 
-        private void LoadClients()
-        {
+        private void LoadClients() =>
             dgClients.ItemsSource = _db.GetClients(txtGlobalSearch.Text).ToList();
-        }
 
-        private void LoadBookings()
-        {
+        private void LoadBookings() =>
             dgBookings.ItemsSource = _db.GetBookings(txtGlobalSearch.Text).ToList();
-        }
-        #endregion
 
-        #region Lanes handlers
+        // -------------------- LANES --------------------
         private void AddLane_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Manager")) { ShowNoRights(); return; }
-            //var dlg = new LaneDialog(null) { Owner = Window.GetWindow(this) };
-           //if (dlg.ShowDialog() == true)
-            {
-                LoadLanes();
-                _db.LogAction(_currentUser?.Id ?? 0, "Добавление", "Добавлена дорожка");
-            }
+            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
+
+            //NavigationService.Navigate(new LaneEditPage(null));
         }
 
         private void EditLane_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Manager")) { ShowNoRights(); return; }
+            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
+
             if (dgLanes.SelectedItem is Lanes lane)
             {
-                //var dlg = new LaneDialog(lane) { Owner = Window.GetWindow(this) };
-             //   if (dlg.ShowDialog() == true)
-                {
-                    LoadLanes();
-                    _db.LogAction(_currentUser?.Id ?? 0, "Редактирование", $"Отредактирована дорожка №{lane.LaneNumber}");
-                }
+                //NavigationService.Navigate(new LaneEditPage(lane));
             }
-            else MessageBox.Show("Выберите дорожку.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            else MessageBox.Show("Выберите дорожку.");
         }
 
         private void DeleteLane_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin")) { ShowNoRights(); return; }
+
             if (dgLanes.SelectedItem is Lanes lane)
             {
-                if (MessageBox.Show($"Удалить дорожку №{lane.LaneNumber}?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                if (MessageBox.Show($"Удалить дорожку №{lane.LaneNumber}?", "Подтверждение",
+                    MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
-                    //if (_db.DeleteLane(lane.Id))
+                    if (_db.DeleteLane(lane.Id))
                     {
                         LoadLanes();
-                        _db.LogAction(_currentUser?.Id ?? 0, "Удаление", $"Удалена дорожка №{lane.LaneNumber}");
+                        _db.LogAction(_currentUser.Id, "Удаление", $"Дорожка №{lane.LaneNumber}");
                     }
-                 //   else MessageBox.Show("Невозможно удалить дорожку (возможно есть активные бронирования).", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    else MessageBox.Show("Невозможно удалить дорожку (есть активные бронирования).");
                 }
             }
-            else MessageBox.Show("Выберите дорожку.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            else MessageBox.Show("Выберите дорожку.");
         }
-        #endregion
 
-        #region Games handlers (скелет)
+        // -------------------- EVENTS --------------------
         private void AddGame_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Manager")) { ShowNoRights(); return; }
-           //var dlg = new GameDialog(null) { Owner = Window.GetWindow(this) };
-            //if (dlg.ShowDialog() == true)
-            {
-                LoadGames();
-                _db.LogAction(_currentUser?.Id ?? 0, "Добавление", "Добавлена игра");
-            }
+            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
+
+           // NavigationService.Navigate(new EventEditPage(null));
         }
 
         private void EditGame_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Manager")) { ShowNoRights(); return; }
-            if (dgGames.SelectedItem is Events g)
+            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
+
+            if (dgGames.SelectedItem is Events ev)
             {
-               // var dlg = new GameDialog(g) { Owner = Window.GetWindow(this) };
-               // if (dlg.ShowDialog() == true)
-                {
-                    LoadGames();
-                    _db.LogAction(_currentUser?.Id ?? 0, "Редактирование", $"Отредактирована игра Id={g.Id}");
-                }
+               // NavigationService.Navigate(new EventEditPage(ev));
             }
-            else MessageBox.Show("Выберите игру.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            else MessageBox.Show("Выберите событие.");
         }
 
         private void DeleteGame_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin")) { ShowNoRights(); return; }
-            if (dgGames.SelectedItem is Events g)
+
+            if (dgGames.SelectedItem is Events ev)
             {
-                if (MessageBox.Show($"Удалить игру \"{g.Name}\"?", "Подтверждение", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                if (MessageBox.Show($"Удалить событие \"{ev.Name}\"?", "Подтверждение",
+                    MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
-                    if (_db.DeleteGame(g.Id))
+                    if (_db.DeleteEvent(ev.Id))
                     {
                         LoadGames();
-                        _db.LogAction(_currentUser?.Id ?? 0, "Удаление", $"Удалена игра Id={g.Id}");
+                        _db.LogAction(_currentUser.Id, "Удаление", $"Событие Id={ev.Id}");
                     }
-                    else MessageBox.Show("Невозможно удалить игру.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    else MessageBox.Show("Невозможно удалить событие (есть участники).");
                 }
             }
-            else MessageBox.Show("Выберите игру.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            else MessageBox.Show("Выберите событие.");
         }
-        #endregion
 
-        #region Inventory handlers
+        // -------------------- INVENTORY --------------------
         private void AddInventory_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Manager")) { ShowNoRights(); return; }
-            //var dlg = new InventoryDialog(null) { Owner = Window.GetWindow(this) };
-            //if (dlg.ShowDialog() == true)
-            {
-                LoadInventory();
-                _db.LogAction(_currentUser?.Id ?? 0, "Добавление", "Добавлен элемент инвентаря");
-            }
+            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
+
+           // NavigationService.Navigate(new InventoryEditPage(null));
         }
 
         private void EditInventory_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Manager")) { ShowNoRights(); return; }
+            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
+
             if (dgInventory.SelectedItem is InventoryItems it)
             {
-                ////var dlg = new InventoryDialog(it) { Owner = Window.GetWindow(this) };
-                ///if (dlg.ShowDialog() == true)
-                {
-                    LoadInventory();
-                    _db.LogAction(_currentUser?.Id ?? 0, "Редактирование", $"Отредактирован инвентарь Id={it.Id}");
-                }
+                //NavigationService.Navigate(new InventoryEditPage(it));
             }
-            else MessageBox.Show("Выберите элемент инвентаря.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            else MessageBox.Show("Выберите элемент.");
         }
 
         private void DeleteInventory_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin")) { ShowNoRights(); return; }
+
             if (dgInventory.SelectedItem is InventoryItems it)
             {
-                if (MessageBox.Show($"Удалить \"{it.Type}\"?", "Подтверждение", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                if (MessageBox.Show($"Удалить \"{it.Name}\"?", "Подтверждение",
+                    MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
                     if (_db.DeleteInventoryItem(it.Id))
                     {
                         LoadInventory();
-                        _db.LogAction(_currentUser?.Id ?? 0, "Удаление", $"Удалён инвентарь Id={it.Id}");
+                        _db.LogAction(_currentUser.Id, "Удаление", $"Инвентарь Id={it.Id}");
                     }
-                    else MessageBox.Show("Невозможно удалить элемент инвентаря.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
-            else MessageBox.Show("Выберите элемент инвентаря.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            else MessageBox.Show("Выберите элемент.");
         }
-        #endregion
 
-        #region Clients handlers
+        // -------------------- CLIENTS --------------------
         private void AddClient_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Manager")) { ShowNoRights(); return; }
-            ////var dlg = new ClientDialog(null) { Owner = Window.GetWindow(this) };
-          //  if (dlg.ShowDialog() == true)
-            {
-                LoadClients();
-                _db.LogAction(_currentUser?.Id ?? 0, "Добавление", "Добавлен клиент");
-            }
+            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
+
+           //NavigationService.Navigate(new ClientEditPage(null));
         }
 
         private void EditClient_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Manager")) { ShowNoRights(); return; }
+            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
+
             if (dgClients.SelectedItem is Clients c)
             {
-            //   var dlg = new ClientDialog(c) { Owner = Window.GetWindow(this) };
-            //    if (dlg.ShowDialog() == true)
-                {
-                    LoadClients();
-                    _db.LogAction(_currentUser?.Id ?? 0, "Редактирование", $"Отредактирован клиент Id={c.Id}");
-                }
+                //NavigationService.Navigate(new ClientEditPage(c));
             }
-            else MessageBox.Show("Выберите клиента.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            else MessageBox.Show("Выберите клиента.");
         }
 
         private void DeleteClient_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin")) { ShowNoRights(); return; }
+
             if (dgClients.SelectedItem is Clients c)
             {
-                if (MessageBox.Show($"Удалить клиента \"{c.FullName}\"?", "Подтверждение", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                if (MessageBox.Show($"Удалить клиента \"{c.FullName}\"?", "Подтверждение",
+                    MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
                     if (_db.DeleteClient(c.Id))
                     {
                         LoadClients();
-                        _db.LogAction(_currentUser?.Id ?? 0, "Удаление", $"Удалён клиент Id={c.Id}");
+                        _db.LogAction(_currentUser.Id, "Удаление", $"Клиент Id={c.Id}");
                     }
-                    else MessageBox.Show("Невозможно удалить клиента.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
-            else MessageBox.Show("Выберите клиента.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            else MessageBox.Show("Выберите клиента.");
         }
-        #endregion
 
-        #region Bookings handlers
+        // -------------------- BOOKINGS --------------------
         private void AddBooking_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Manager")) { ShowNoRights(); return; }
-            //var win = new BookingWindow(_currentUser, null) { Owner = Window.GetWindow(this) };
-           // if (win.ShowDialog() == true)
-            {
-                LoadBookings();
-                _db.LogAction(_currentUser?.Id ?? 0, "Добавление", "Добавлено бронирование");
-            }
+            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
+
+            //NavigationService.Navigate(new BookingEditPage(null));
         }
 
         private void EditBooking_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Manager")) { ShowNoRights(); return; }
+            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
+
             if (dgBookings.SelectedItem is Bookings b)
             {
-          //     var win = new BookingWindow(_currentUser, b) { Owner = Window.GetWindow(this) };
-           //     if (win.ShowDialog() == true)
-                {
-                    LoadBookings();
-                    _db.LogAction(_currentUser?.Id ?? 0, "Редактирование", $"Отредактировано бронирование Id={b.Id}");
-                }
+                //NavigationService.Navigate(new BookingEditPage(b));
             }
-            else MessageBox.Show("Выберите бронирование.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            else MessageBox.Show("Выберите бронирование.");
         }
 
         private void CancelBooking_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin")) { ShowNoRights(); return; }
+
             if (dgBookings.SelectedItem is Bookings b)
             {
-                if (MessageBox.Show($"Отменить бронирование Id={b.Id}?", "Подтверждение", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                if (MessageBox.Show($"Отменить бронирование Id={b.Id}?", "Подтверждение",
+                    MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
                     if (_db.CancelBooking(b.Id))
                     {
                         LoadBookings();
-                        _db.LogAction(_currentUser?.Id ?? 0, "Отмена", $"Отменено бронирование Id={b.Id}");
+                        _db.LogAction(_currentUser.Id, "Отмена", $"Бронирование Id={b.Id}");
                     }
-                    else MessageBox.Show("Невозможно отменить бронирование.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
-            else MessageBox.Show("Выберите бронирование.", "Внимание", MessageBoxButton.OK, MessageBoxImage.Information);
+            else MessageBox.Show("Выберите бронирование.");
         }
-        #endregion
 
-        #region Helpers
+        // -------------------- HELPERS --------------------
         private bool HasRole(params string[] roles)
         {
             if (_currentUser == null) return false;
-            return roles.Any(r => string.Equals(_currentUser.Role, r, StringComparison.OrdinalIgnoreCase));
+            return roles.Any(r => r.Equals(_currentUser.Role, StringComparison.OrdinalIgnoreCase));
         }
 
         private void ShowNoRights()
         {
-            MessageBox.Show("У вас нет прав для выполнения этой операции.", "Доступ запрещён", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("Недостаточно прав.", "Доступ запрещён",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
         }
-        #endregion
     }
 }

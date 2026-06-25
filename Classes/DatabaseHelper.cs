@@ -6,13 +6,13 @@ using System.Data.Entity;
 
 namespace BowlingClub.Database
 {
+
     public class DatabaseHelper : IDisposable
     {
         private readonly BowlingClubEntities _ctx = new BowlingClubEntities(); // имя контекста из EDMX
 
         public DatabaseHelper()
         {
-            // Отключаем прокси/ленивую загрузку при необходимости
             try
             {
                 _ctx.Configuration.LazyLoadingEnabled = false;
@@ -20,24 +20,20 @@ namespace BowlingClub.Database
             }
             catch
             {
-                // если контекст ObjectContext, этих свойств может не быть
             }
         }
 
-        // Аутентификация: сравниваем plain password
         public Users Authenticate(string login, string password)
         {
             if (string.IsNullOrWhiteSpace(login) || password == null) return null;
             return _ctx.Users.FirstOrDefault(u => u.Login == login && u.Password == password);
         }
 
-        // Проверка существования логина/email
         public bool UserExists(string login, string email)
         {
             return _ctx.Users.Any(u => u.Login == login || u.Email == email);
         }
 
-        // Регистрация: заполняем FullName, Email, Login, Phone и сохраняем пароль как plain string
         public Users RegisterUserSimple(string fullName, string email, string login, string phone, string password)
         {
             if (string.IsNullOrWhiteSpace(login) || password == null)
@@ -62,161 +58,194 @@ namespace BowlingClub.Database
             return user;
         }
 
-        // Лог действий
-        public void LogAction(int userId, string actionType, string details)
+        public IQueryable<Lanes> GetLanes(string search = null)
         {
-            try
-            {
-                var ua = new UserActions
-                {
-                    UserId = userId,
-                    ActionType = actionType,
-                    Details = details,
-                    Timestamp = DateTime.UtcNow
-                };
-                _ctx.UserActions.Add(ua);
-                _ctx.SaveChanges();
-            }
-            catch
-            {
-
-            }
-        }
-
-        public IQueryable<Lanes> GetLanes(string search = null, int? laneTypeId = null, int? statusId = null)
-        {
-            // Подключаем связанные сущности для отображения в DataGrid
             var q = _ctx.Lanes
-                        .Include(l => l.LaneTypes)    // если в модели есть навигационные свойства
-                        .Include(l => l.LaneStatuses)
-                        .AsQueryable();
+                .Include(l => l.LaneTypes)
+                .Include(l => l.LaneStatuses)
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search))
             {
                 string s = search.Trim();
-                // Поиск по номеру дорожки (приводим к строке) и по имени типа/статуса
                 q = q.Where(l =>
-                    SqlFunctions.StringConvert((double)l.LaneNumber).Contains(s) ||
+                    l.LaneNumber.ToString().Contains(s) ||
                     l.LaneTypes.Name.Contains(s) ||
                     l.LaneStatuses.Name.Contains(s));
             }
 
-            if (laneTypeId.HasValue)
-                q = q.Where(l => l.LaneTypeId == laneTypeId.Value);
-
-            if (statusId.HasValue)
-                q = q.Where(l => l.StatusId == statusId.Value);
-
             return q.OrderBy(l => l.LaneNumber);
         }
 
-            public bool DeleteGame(int id)
+        public bool DeleteLane(int laneId)
+        {
+            var lane = _ctx.Lanes.Find(laneId);
+            if (lane == null) return false;
+
+            bool hasBookings = _ctx.Bookings.Any(b => b.LaneId == laneId && b.Status != "Cancelled");
+            if (hasBookings) return false;
+
+            _ctx.Lanes.Remove(lane);
+            _ctx.SaveChanges();
+            return true;
+        }
+
+        // -------------------- EVENTS --------------------
+        public IQueryable<Events> GetEvents(string search = null)
+        {
+            var q = _ctx.Events
+                .Include(e => e.Lanes)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                var game = _ctx.Events.Find(id);
-                if (game == null) return false;
+                string s = search.Trim();
 
-                _ctx.Events.Remove(game);
-                _ctx.SaveChanges();
-                return true;
-            }
+                q = q.Where(e =>
+                    e.Name.Contains(s) ||
+                    e.Description.Contains(s));
 
-            // ----------------- Inventory -----------------
-            public IQueryable<InventoryItems> GetInventoryItems(string search = null, string type = null)
-            {
-                var q = _ctx.InventoryItems.AsQueryable();
-
-                if (!string.IsNullOrWhiteSpace(search))
+                if (int.TryParse(s, out int laneNum))
                 {
-                    string s = search.Trim();
-                    q = q.Where(i => i.Type.Contains(s) || i.Type.Contains(s));
+                    q = q.Where(e => e.Lanes.LaneNumber == laneNum);
                 }
-
-                if (!string.IsNullOrWhiteSpace(type))
-                    q = q.Where(i => i.Type == type);
-
-                return q.OrderBy(i => i.Type);
             }
 
-            public bool DeleteInventoryItem(int id)
+            return q.OrderBy(e => e.EventDate);
+        }
+
+        public bool DeleteEvent(int eventId)
+        {
+            var ev = _ctx.Events
+                .Include(e => e.EventRegistrations)
+                .FirstOrDefault(e => e.Id == eventId);
+
+            if (ev == null) return false;
+
+            if (ev.EventRegistrations.Any())
+                return false;
+
+            _ctx.Events.Remove(ev);
+            _ctx.SaveChanges();
+            return true;
+        }
+
+        // -------------------- INVENTORY --------------------
+        public IQueryable<InventoryItems> GetInventoryItems(string search = null)
+        {
+            var q = _ctx.InventoryItems.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                var item = _ctx.InventoryItems.Find(id);
-                if (item == null) return false;
-
-                // Проверка связей: используется ли в активных играх/заказах
-                bool inUse = _ctx.InventoryItems.Any(gi => gi.Id == id);
-                if (inUse) return false;
-
-                _ctx.InventoryItems.Remove(item);
-                _ctx.SaveChanges();
-                return true;
+                string s = search.Trim();
+                q = q.Where(i =>
+                    i.Name.Contains(s) ||
+                    i.Type.Contains(s));
             }
 
-            // ----------------- Clients -----------------
-            public IQueryable<Clients> GetClients(string search = null)
-            {
-                var q = _ctx.Clients.AsQueryable();
+            return q.OrderBy(i => i.Name);
+        }
 
-                if (!string.IsNullOrWhiteSpace(search))
+        public bool DeleteInventoryItem(int id)
+        {
+            var item = _ctx.InventoryItems.Find(id);
+            if (item == null) return false;
+
+            _ctx.InventoryItems.Remove(item);
+            _ctx.SaveChanges();
+            return true;
+        }
+
+        // -------------------- CLIENTS --------------------
+        public IQueryable<Clients> GetClients(string search = null)
+        {
+            var q = _ctx.Clients.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                string s = search.Trim();
+                q = q.Where(c =>
+                    c.FullName.Contains(s) ||
+                    c.Email.Contains(s) ||
+                    c.Phone.Contains(s));
+            }
+
+            return q.OrderBy(c => c.FullName);
+        }
+
+        public bool DeleteClient(int id)
+        {
+            var client = _ctx.Clients
+                .Include(c => c.Bookings)
+                .Include(c => c.EventRegistrations)
+                .FirstOrDefault(c => c.Id == id);
+
+            if (client == null) return false;
+
+            if (client.Bookings.Any(b => b.Status != "Cancelled"))
+                return false;
+
+            if (client.EventRegistrations.Any())
+                return false;
+
+            _ctx.Clients.Remove(client);
+            _ctx.SaveChanges();
+            return true;
+        }
+
+        // -------------------- BOOKINGS --------------------
+        public IQueryable<Bookings> GetBookings(string search = null)
+        {
+            var q = _ctx.Bookings
+                .Include(b => b.Clients)
+                .Include(b => b.Lanes)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                string s = search.Trim();
+
+                q = q.Where(b =>
+                    b.Clients.FullName.Contains(s) ||
+                    b.Status.Contains(s));
+
+                if (int.TryParse(s, out int laneNum))
                 {
-                    string s = search.Trim();
-                    q = q.Where(c => c.FullName.Contains(s) || c.Email.Contains(s) || c.Phone.Contains(s));
+                    q = q.Where(b => b.Lanes.LaneNumber == laneNum);
                 }
-
-                return q.OrderBy(c => c.FullName);
             }
 
-            public bool DeleteClient(int id)
+            return q.OrderByDescending(b => b.StartTime);
+        }
+
+        public bool CancelBooking(int id)
+        {
+            var booking = _ctx.Bookings.Find(id);
+            if (booking == null) return false;
+
+            booking.Status = "Cancelled";
+            _ctx.SaveChanges();
+            return true;
+        }
+
+        // -------------------- LOGGING --------------------
+        public void LogAction(int userId, string actionType, string details)
+        {
+            var log = new UserActions
             {
-                var client = _ctx.Clients.Include(c => c.Bookings).FirstOrDefault(c => c.Id == id);
-                if (client == null) return false;
+                UserId = userId,
+                ActionType = actionType,
+                Details = details,
+                Timestamp = DateTime.Now
+            };
 
-                // Если у клиента есть активные брони — не удаляем
-                bool hasActive = client.Bookings.Any(b => b.Status != "Cancelled" && b.StartTime >= DateTime.Now);
-                if (hasActive) return false;
+            _ctx.UserActions.Add(log);
+            _ctx.SaveChanges();
+        }
 
-                // Можно также пометить как IsArchived вместо удаления
-                _ctx.Clients.Remove(client);
-                _ctx.SaveChanges();
-                return true;
-            }
-
-            // ----------------- Bookings -----------------
-            public IQueryable<Bookings> GetBookings(string search = null, int? laneId = null, int? clientId = null, string status = null)
-            {
-                var q = _ctx.Bookings
-                            .Include(b => b.Clients)
-                            .Include(b => b.Lanes)
-                            .AsQueryable();
-
-                if (!string.IsNullOrWhiteSpace(search))
-                {
-                    string s = search.Trim();
-                    if (int.TryParse(s, out int num))
-                        q = q.Where(b => b.Lanes.LaneNumber == num || b.Clients.FullName.Contains(s));
-                    else
-                        q = q.Where(b => b.Clients.FullName.Contains(s) || b.Status.Contains(s));
-                }
-
-                if (laneId.HasValue) q = q.Where(b => b.LaneId == laneId.Value);
-                if (clientId.HasValue) q = q.Where(b => b.ClientId == clientId.Value);
-                if (!string.IsNullOrWhiteSpace(status)) q = q.Where(b => b.Status == status);
-
-                return q.OrderByDescending(b => b.StartTime);
-            }
-
-            // Отмена бронирования (пометка статуса)
-            public bool CancelBooking(int id)
-            {
-                var booking = _ctx.Bookings.Find(id);
-                if (booking == null) return false;
-
-                // Бизнес-правило: нельзя отменять прошедшие брони
-                if (booking.StartTime <= DateTime.Now) return false;
-
-                booking.Status = "Cancelled";
-                _ctx.SaveChanges();
-                return true;
-            }
-    public void Dispose() => _ctx.Dispose();
+        public void Dispose()
+        {
+            _ctx.Dispose();
+        }
     }
 }

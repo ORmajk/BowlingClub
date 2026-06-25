@@ -26,6 +26,8 @@ namespace BowlingClub.AppData
         public string Phone { get; set; }
         public string Email { get; set; }
         public System.DateTime RegistrationDate { get; set; }
+        public int Points { get; set; }
+        public bool IsSubscribedToAl { get; set; }
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Bookings> Bookings { get; set; }

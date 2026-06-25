@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-      <Schema Namespace="Хранилище BowlingClubModel" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="Хранилище BowlingClubModel" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Awards">
           <Key>
             <PropertyRef Name="Id" />
@@ -47,6 +47,8 @@
           <Property Name="Phone" Type="nvarchar" MaxLength="50" />
           <Property Name="Email" Type="nvarchar" MaxLength="100" />
           <Property Name="RegistrationDate" Type="date" Nullable="false" />
+          <Property Name="Points" Type="int" Nullable="false" />
+          <Property Name="IsSubscribedToAl" Type="bit" Nullable="false" />
         </EntityType>
         <EntityType Name="EventRegistrations">
           <Key>
@@ -64,6 +66,7 @@
           <Property Name="Name" Type="nvarchar" MaxLength="200" Nullable="false" />
           <Property Name="EventDate" Type="date" Nullable="false" />
           <Property Name="Description" Type="nvarchar" MaxLength="500" />
+          <Property Name="LaneId" Type="int" />
         </EntityType>
         <EntityType Name="InventoryItems">
           <Key>
@@ -75,6 +78,7 @@
           <Property Name="StatusId" Type="int" Nullable="false" />
           <Property Name="Quantity" Type="int" Nullable="false" />
           <Property Name="CreatedAt" Type="datetime" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="50" />
         </EntityType>
         <EntityType Name="InventoryStatuses">
           <Key>
@@ -93,6 +97,7 @@
           <Property Name="StatusId" Type="int" Nullable="false" />
           <Property Name="Capacity" Type="int" Nullable="false" />
           <Property Name="PricePerHour" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Photo" Type="nvarchar" MaxLength="50" />
         </EntityType>
         <EntityType Name="LaneStatuses">
           <Key>
@@ -213,6 +218,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_Events_Lanes">
+          <End Role="Lanes" Type="Self.Lanes" Multiplicity="0..1" />
+          <End Role="Events" Type="Self.Events" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Lanes">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Events">
+              <PropertyRef Name="LaneId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_InventoryItems_Status">
           <End Role="InventoryStatuses" Type="Self.InventoryStatuses" Multiplicity="1" />
           <End Role="InventoryItems" Type="Self.InventoryItems" Multiplicity="*" />
@@ -321,6 +338,10 @@
             <End Role="Events" EntitySet="Events" />
             <End Role="EventRegistrations" EntitySet="EventRegistrations" />
           </AssociationSet>
+          <AssociationSet Name="FK_Events_Lanes" Association="Self.FK_Events_Lanes">
+            <End Role="Lanes" EntitySet="Lanes" />
+            <End Role="Events" EntitySet="Events" />
+          </AssociationSet>
           <AssociationSet Name="FK_InventoryItems_Status" Association="Self.FK_InventoryItems_Status">
             <End Role="InventoryStatuses" EntitySet="InventoryStatuses" />
             <End Role="InventoryItems" EntitySet="InventoryItems" />
@@ -346,8 +367,7 @@
             <End Role="UserAwards" EntitySet="UserAwards" />
           </AssociationSet>
         </EntityContainer>
-      </Schema>
-    </edmx:StorageModels>
+      </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="BowlingClubModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
@@ -400,6 +420,8 @@
           <Property Name="RegistrationDate" Type="DateTime" Nullable="false" Precision="0" />
           <NavigationProperty Name="Bookings" Relationship="Self.FK_Bookings_Clients" FromRole="Clients" ToRole="Bookings" />
           <NavigationProperty Name="EventRegistrations" Relationship="Self.FK_EventRegistrations_Clients" FromRole="Clients" ToRole="EventRegistrations" />
+          <Property Name="Points" Type="Int32" Nullable="false" />
+          <Property Name="IsSubscribedToAl" Type="Boolean" Nullable="false" />
         </EntityType>
         <EntityType Name="EventRegistrations">
           <Key>
@@ -420,6 +442,8 @@
           <Property Name="EventDate" Type="DateTime" Nullable="false" Precision="0" />
           <Property Name="Description" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="EventRegistrations" Relationship="Self.FK_EventRegistrations_Events" FromRole="Events" ToRole="EventRegistrations" />
+          <Property Name="LaneId" Type="Int32" />
+          <NavigationProperty Name="Lanes" Relationship="BowlingClubModel.FK_Events_Lanes" FromRole="Events" ToRole="Lanes" />
         </EntityType>
         <EntityType Name="InventoryItems">
           <Key>
@@ -432,6 +456,7 @@
           <Property Name="Quantity" Type="Int32" Nullable="false" />
           <Property Name="CreatedAt" Type="DateTime" Nullable="false" Precision="3" />
           <NavigationProperty Name="InventoryStatuses" Relationship="Self.FK_InventoryItems_Status" FromRole="InventoryItems" ToRole="InventoryStatuses" />
+          <Property Name="Name" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="InventoryStatuses">
           <Key>
@@ -454,6 +479,8 @@
           <NavigationProperty Name="Bookings" Relationship="Self.FK_Bookings_Lanes" FromRole="Lanes" ToRole="Bookings" />
           <NavigationProperty Name="LaneStatuses" Relationship="Self.FK_Lanes_LaneStatuses" FromRole="Lanes" ToRole="LaneStatuses" />
           <NavigationProperty Name="LaneTypes" Relationship="Self.FK_Lanes_LaneTypes" FromRole="Lanes" ToRole="LaneTypes" />
+          <NavigationProperty Name="Events" Relationship="BowlingClubModel.FK_Events_Lanes" FromRole="Lanes" ToRole="Events" />
+          <Property Name="Photo" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="LaneStatuses">
           <Key>
@@ -713,7 +740,23 @@
             <End Role="Users" EntitySet="Users" />
             <End Role="UserAwards" EntitySet="UserAwards" />
           </AssociationSet>
+          <AssociationSet Name="FK_Events_Lanes" Association="BowlingClubModel.FK_Events_Lanes">
+            <End Role="Lanes" EntitySet="Lanes" />
+            <End Role="Events" EntitySet="Events" />
+          </AssociationSet>
         </EntityContainer>
+        <Association Name="FK_Events_Lanes">
+          <End Type="BowlingClubModel.Lanes" Role="Lanes" Multiplicity="0..1" />
+          <End Type="BowlingClubModel.Events" Role="Events" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Lanes">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Events">
+              <PropertyRef Name="LaneId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -759,6 +802,8 @@
           <EntitySetMapping Name="Clients">
             <EntityTypeMapping TypeName="BowlingClubModel.Clients">
               <MappingFragment StoreEntitySet="Clients">
+                <ScalarProperty Name="IsSubscribedToAl" ColumnName="IsSubscribedToAl" />
+                <ScalarProperty Name="Points" ColumnName="Points" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="FullName" ColumnName="FullName" />
                 <ScalarProperty Name="Phone" ColumnName="Phone" />
@@ -779,6 +824,7 @@
           <EntitySetMapping Name="Events">
             <EntityTypeMapping TypeName="BowlingClubModel.Events">
               <MappingFragment StoreEntitySet="Events">
+                <ScalarProperty Name="LaneId" ColumnName="LaneId" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
                 <ScalarProperty Name="EventDate" ColumnName="EventDate" />
@@ -789,6 +835,7 @@
           <EntitySetMapping Name="InventoryItems">
             <EntityTypeMapping TypeName="BowlingClubModel.InventoryItems">
               <MappingFragment StoreEntitySet="InventoryItems">
+                <ScalarProperty Name="Name" ColumnName="Name" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Type" ColumnName="Type" />
                 <ScalarProperty Name="SizeOrWeight" ColumnName="SizeOrWeight" />
@@ -809,6 +856,7 @@
           <EntitySetMapping Name="Lanes">
             <EntityTypeMapping TypeName="BowlingClubModel.Lanes">
               <MappingFragment StoreEntitySet="Lanes">
+                <ScalarProperty Name="Photo" ColumnName="Photo" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="LaneNumber" ColumnName="LaneNumber" />
                 <ScalarProperty Name="LaneTypeId" ColumnName="LaneTypeId" />

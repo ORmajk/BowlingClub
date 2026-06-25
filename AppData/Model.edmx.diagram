@@ -31,6 +31,7 @@
         <AssociationConnector Association="BowlingClubModel.FK_Lanes_LaneTypes" ManuallyRouted="false" />
         <AssociationConnector Association="BowlingClubModel.FK_UserActions_Users" ManuallyRouted="false" />
         <AssociationConnector Association="BowlingClubModel.FK_UserAwards_Users" ManuallyRouted="false" />
+        <AssociationConnector Association="BowlingClubModel.FK_Events_Lanes" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>
