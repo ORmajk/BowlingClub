@@ -89,12 +89,10 @@ namespace BowlingClub.Database
                     StringBuilder sb = new StringBuilder();
                     var props = typeof(T).GetProperties();
 
-                    // 1. Заголовки (названия свойств вашей модели)
                     List<string> headers = new List<string>();
                     foreach (var p in props) headers.Add($"\"{p.Name}\"");
                     sb.AppendLine(string.Join(";", headers));
 
-                    // 2. Строки данных
                     foreach (var item in items)
                     {
                         List<string> cells = new List<string>();
@@ -108,7 +106,6 @@ namespace BowlingClub.Database
                                 str = dt.ToString("dd.MM.yyyy HH:mm");
                             }
 
-                            // Вот эта строка без сложных интерполяций, ломающих компилятор:
                             string cleanStr = str.Replace("\"", "\"\"");
                             cells.Add("\"" + cleanStr + "\"");
                         }
@@ -116,7 +113,6 @@ namespace BowlingClub.Database
                     }
 
 
-                    // Запись с BOM-маркером (гарантирует, что русский текст в Excel не превратится в кракозябры)
                     File.WriteAllText(dlg.FileName, sb.ToString(), new UTF8Encoding(true));
 
                         MessageBox.Show("Данные успешно сохранены!", "Экспорт", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -133,7 +129,6 @@ namespace BowlingClub.Database
             if (ev == null || ev.EventRegistrations == null || !ev.EventRegistrations.Any())
                 return "Нет участников";
 
-            // Собираем FullName клиентов через запятую
             var names = ev.EventRegistrations
                 .Where(er => er.Clients != null)
                 .Select(er => er.Clients.FullName);
