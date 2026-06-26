@@ -409,5 +409,33 @@ namespace BowlingClub.Pages
         {
             RefreshAllData();
         }
+
+        private void btnExportLanes_Click(object sender, RoutedEventArgs e)
+        {
+            var lanesData = dgLanes.ItemsSource as System.Collections.Generic.IEnumerable<Lanes>;
+
+            if (lanesData != null)
+            {
+                DatabaseHelper.Export(lanesData, "Список_дорожек.csv");
+            }
+            else
+            {
+                MessageBox.Show("Нет данных для экспорта или таблица пуста.", "Уведомление", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void btnExportGames_Click(object sender, RoutedEventArgs e)
+        {
+            var bookingData = dgBookings.ItemsSource as System.Collections.Generic.IEnumerable<Bookings>;
+
+            if (bookingData != null)
+            {
+                DatabaseHelper.Export(bookingData, "Список_дорожек.csv");
+            }
+            else
+            {
+                MessageBox.Show("Нет данных для экспорта или таблица пуста.", "Уведомление", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
     }
 }

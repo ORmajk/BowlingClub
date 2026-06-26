@@ -31,7 +31,9 @@
                             <Button x:Name="btnEditLane" Content="Редактировать" Click="EditLane_Click" Margin="0,0,6,0"
                         Background="#3A8DFF" Foreground="White" FontSize="16" FontWeight="Bold" Padding="10 4"/>
                             <Button x:Name="btnDeleteLane" Content="Удалить" Click="DeleteLane_Click"
-                        Background="#3A8DFF" Foreground="White" FontSize="16" FontWeight="Bold" Padding="10 4"/>
+                        Background="#3A8DFF" Foreground="White" FontSize="16" FontWeight="Bold" Padding="10 4" Margin="0,0,6,0"/>
+                            <Button x:Name="btnExportLanes" Content="Экспорт в CSV" Click="btnExportLanes_Click" 
+                                    Background="#28A745" Foreground="White" FontSize="16" FontWeight="Bold" Padding="10 4"/>
                         </StackPanel>
 
                         <DataGrid x:Name="dgLanes" AutoGenerateColumns="False" Margin="6" IsReadOnly="True"
@@ -154,7 +156,9 @@
                             <Button x:Name="btnEditBooking" Content="Редактировать" Click="EditBooking_Click" Margin="0,0,6,0"
                     Background="#3A8DFF" Foreground="White" FontSize="16" FontWeight="Bold" Padding="10 4"/>
                             <Button x:Name="btnCancelBooking" Content="Отменить" Click="CancelBooking_Click"
-                    Background="#3A8DFF" Foreground="White" FontSize="16" FontWeight="Bold" Padding="10 4"/>
+                    Background="#3A8DFF" Foreground="White" FontSize="16" FontWeight="Bold" Padding="10 4" Margin="0,0,6,0"/>
+                            <Button x:Name="btnExportGames" Content="Экспорт в CSV" Click="btnExportGames_Click" 
+                    Background="#28A745" Foreground="White" FontSize="16" FontWeight="Bold" Padding="10 4"/>
                         </StackPanel>
 
                         <DataGrid x:Name="dgBookings" AutoGenerateColumns="False" Margin="6" IsReadOnly="True"
