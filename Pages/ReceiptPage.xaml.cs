@@ -2,23 +2,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using System.IO;
+using ZXing;
 
 namespace BowlingClub.Pages
 {
-    /// <summary>
-    /// Логика взаимодействия для ReceiptPage.xaml
-    /// </summary>
     public partial class ReceiptPage : Page
     {
         private Bookings _currentBooking;
@@ -39,54 +31,27 @@ namespace BowlingClub.Pages
 
             _currentBooking = booking;
 
-            // Загружаем услуги для этого бронирования
             LoadBookingItems();
-
-            // Загружаем связанные данные (клиент, дорожка)
             LoadRelatedData();
 
-            // Устанавливаем контекст данных
             this.DataContext = _currentBooking;
-
-            // Заполняем таблицу услуг
             dgReceiptItems.ItemsSource = _itemsList;
-
-            // Обновляем итоговую сумму
             UpdateTotalAmount();
+
+            LoadQR();
         }
 
         private void LoadBookingItems()
         {
             try
             {
-                // Загружаем услуги из БД
                 _itemsList = AppConnect.model.BookingItems
                     .Where(bi => bi.BookingId == _currentBooking.Id)
                     .ToList();
 
-                // Если услуги не найдены, создаем тестовые данные (для демонстрации)
                 if (!_itemsList.Any())
                 {
-                    _itemsList = new List<BookingItems>
-                    {
-                        new BookingItems
-                        {
-                            ItemName = "Аренда дорожки",
-                            Quantity = 1,
-                            Price = 1200.00m,
-                            Total = 1200.00m
-                        },
-                        new BookingItems
-                        {
-                            ItemName = "Аренда обуви",
-                            Quantity = 2,
-                            Price = 250.00m,
-                            Total = 500.00m
-                        }
-                    };
-
-                    // Обновляем общую сумму в бронировании
-                    _currentBooking.TotalAmount = _itemsList.Sum(i => i.Total);
+                    _itemsList = new List<BookingItems>();
                 }
             }
             catch (Exception ex)
@@ -100,7 +65,6 @@ namespace BowlingClub.Pages
         {
             try
             {
-                // Загружаем данные клиента, если они не загружены
                 if (_currentBooking.Clients == null)
                 {
                     AppConnect.model.Entry(_currentBooking)
@@ -108,7 +72,6 @@ namespace BowlingClub.Pages
                         .Load();
                 }
 
-                // Загружаем данные дорожки, если они не загружены
                 if (_currentBooking.Lanes == null)
                 {
                     AppConnect.model.Entry(_currentBooking)
@@ -126,14 +89,115 @@ namespace BowlingClub.Pages
         {
             _totalAmount = _itemsList.Sum(item => item.Total);
 
-            // Обновляем общую сумму в бронировании, если она отличается
             if (_currentBooking.TotalAmount != _totalAmount)
             {
                 _currentBooking.TotalAmount = _totalAmount;
             }
         }
 
-        // Печать чека
+        private void LoadQR()
+        {
+            try
+            {
+                string qrData = GenerateQRData();
+
+                var writer = new ZXing.BarcodeWriter<WriteableBitmap>
+                {
+                    Format = BarcodeFormat.QR_CODE,
+                    Options = new ZXing.Common.EncodingOptions
+                    {
+                        Width = 300,
+                        Height = 300,
+                        Margin = 10
+                    },
+                    Renderer = new ZXing.Rendering.WriteableBitmapRenderer()
+                };
+
+                var result = writer.Write(qrData);
+
+                var bitmap = ConvertWriteableBitmapToBitmapImage(result);
+
+                imgQr.Source = bitmap;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка генерации QR-кода: {ex.Message}");
+                CreateErrorQR();
+            }
+        }
+
+        private BitmapImage ConvertWriteableBitmapToBitmapImage(WriteableBitmap writeableBitmap)
+        {
+            BitmapImage bitmapImage = new BitmapImage();
+
+            using (var memoryStream = new MemoryStream())
+            {
+                var encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(writeableBitmap));
+                encoder.Save(memoryStream);
+                memoryStream.Position = 0;
+
+                bitmapImage.BeginInit();
+                bitmapImage.StreamSource = memoryStream;
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.EndInit();
+                bitmapImage.Freeze();
+            }
+
+            return bitmapImage;
+        }
+
+        private void CreateErrorQR()
+        {
+            try
+            {
+                var writer = new ZXing.BarcodeWriter<WriteableBitmap>
+                {
+                    Format = BarcodeFormat.QR_CODE,
+                    Options = new ZXing.Common.EncodingOptions
+                    {
+                        Width = 300,
+                        Height = 300,
+                        Margin = 10
+                    },
+                    Renderer = new ZXing.Rendering.WriteableBitmapRenderer()
+                };
+
+                var result = writer.Write("Ошибка генерации QR-кода");
+                var bitmap = ConvertWriteableBitmapToBitmapImage(result);
+                imgQr.Source = bitmap;
+            }
+            catch
+            {
+                imgQr.Source = null;
+            }
+        }
+
+        private string GenerateQRData()
+        {
+            var data = new System.Text.StringBuilder();
+
+            data.Append($"ЧЕК #{_currentBooking.BookingNumber}|");
+            data.Append($"Клиент:{_currentBooking.Clients?.FullName ?? "Не указан"}|");
+            data.Append($"Дорожка:{_currentBooking.Lanes?.LaneNumber ?? 0}|");
+            data.Append($"Дата:{_currentBooking.StartTime:dd.MM.yyyy HH:mm}|");
+            data.Append($"Длит:{_currentBooking.DurationMinutes}мин|");
+            data.Append($"Сумма:{_totalAmount:F2}руб|");
+            data.Append($"Оплата:{_currentBooking.PaymentMethod ?? "Не указан"}|");
+            data.Append($"Статус:{_currentBooking.Status ?? "Не указан"}|");
+
+            data.Append("Услуги:");
+            for (int i = 0; i < _itemsList.Count; i++)
+            {
+                var item = _itemsList[i];
+                data.Append($"{item.ItemName}x{item.Quantity}={item.Total:F2}");
+                if (i < _itemsList.Count - 1)
+                    data.Append(",");
+            }
+
+            return data.ToString();
+        }
+
         private void Print_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -142,10 +206,7 @@ namespace BowlingClub.Pages
 
                 if (printDialog.ShowDialog() == true)
                 {
-                    // Создаем копию чека для печати
                     var printGrid = CreatePrintVersion();
-
-                    // Настраиваем печать
                     printDialog.PrintVisual(printGrid, "Чек бронирования #" + _currentBooking.BookingNumber);
 
                     MessageBox.Show("Чек отправлен на печать!", "Успех",
@@ -159,23 +220,41 @@ namespace BowlingClub.Pages
             }
         }
 
-        // Экспорт в PDF (опционально)
         private void ExportToPdf_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // Создаем диалог сохранения файла
                 Microsoft.Win32.SaveFileDialog saveFileDialog = new Microsoft.Win32.SaveFileDialog();
                 saveFileDialog.Filter = "PDF файлы (*.pdf)|*.pdf";
                 saveFileDialog.DefaultExt = ".pdf";
                 saveFileDialog.FileName = $"Чек_{_currentBooking.BookingNumber}_{DateTime.Now:ddMMyyyy}";
+                saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
                 if (saveFileDialog.ShowDialog() == true)
                 {
-                    // Здесь можно использовать стороннюю библиотеку для создания PDF
-                    // Например, iTextSharp или PdfSharp
-                    MessageBox.Show($"Чек сохранен в файл: {saveFileDialog.FileName}", "Успех",
+                    string filePath = saveFileDialog.FileName;
+
+                    MessageBox.Show($"Чек будет сохранен в файл: {filePath}", "Информация",
                         MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    if (File.Exists(filePath))
+                    {
+                        MessageBox.Show($"Чек успешно сохранен!\nПуть: {filePath}", "Успех",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+
+                        var result = MessageBox.Show("Открыть сохраненный файл?", "Открыть файл",
+                            MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            System.Diagnostics.Process.Start(filePath);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Файл не был создан. Проверьте права доступа.", "Ошибка",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             }
             catch (Exception ex)
@@ -185,7 +264,6 @@ namespace BowlingClub.Pages
             }
         }
 
-        // Создание версии для печати
         private Grid CreatePrintVersion()
         {
             Grid printGrid = new Grid
@@ -201,7 +279,6 @@ namespace BowlingClub.Pages
                 Background = Brushes.White
             };
 
-            // Заголовок
             panel.Children.Add(new TextBlock
             {
                 Text = "БОУЛИНГ КЛУБ",
@@ -227,7 +304,6 @@ namespace BowlingClub.Pages
                 Margin = new Thickness(0, 0, 0, 10)
             });
 
-            // Информация о бронировании
             panel.Children.Add(new TextBlock
             {
                 Text = $"Номер брони: {_currentBooking.BookingNumber}",
@@ -263,7 +339,6 @@ namespace BowlingClub.Pages
                 Margin = new Thickness(0, 3, 0, 0)
             });
 
-            // Разделитель
             panel.Children.Add(new TextBlock
             {
                 Text = new string('─', 40),
@@ -271,40 +346,16 @@ namespace BowlingClub.Pages
                 Margin = new Thickness(0, 10, 0, 10)
             });
 
-            // Заголовки таблицы
             Grid headerGrid = new Grid();
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(50) });
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
 
-            headerGrid.Children.Add(new TextBlock
-            {
-                Text = "Услуга",
-                FontWeight = FontWeights.Bold,
-                Margin = new Thickness(2)
-            });
-            headerGrid.Children.Add(new TextBlock
-            {
-                Text = "Кол-во",
-                FontWeight = FontWeights.Bold,
-                Margin = new Thickness(2),
-                HorizontalAlignment = HorizontalAlignment.Center
-            });
-            headerGrid.Children.Add(new TextBlock
-            {
-                Text = "Цена",
-                FontWeight = FontWeights.Bold,
-                Margin = new Thickness(2),
-                HorizontalAlignment = HorizontalAlignment.Right
-            });
-            headerGrid.Children.Add(new TextBlock
-            {
-                Text = "Сумма",
-                FontWeight = FontWeights.Bold,
-                Margin = new Thickness(2),
-                HorizontalAlignment = HorizontalAlignment.Right
-            });
+            headerGrid.Children.Add(new TextBlock { Text = "Услуга", FontWeight = FontWeights.Bold, Margin = new Thickness(2) });
+            headerGrid.Children.Add(new TextBlock { Text = "Кол-во", FontWeight = FontWeights.Bold, Margin = new Thickness(2), HorizontalAlignment = HorizontalAlignment.Center });
+            headerGrid.Children.Add(new TextBlock { Text = "Цена", FontWeight = FontWeights.Bold, Margin = new Thickness(2), HorizontalAlignment = HorizontalAlignment.Right });
+            headerGrid.Children.Add(new TextBlock { Text = "Сумма", FontWeight = FontWeights.Bold, Margin = new Thickness(2), HorizontalAlignment = HorizontalAlignment.Right });
 
             Grid.SetColumn(headerGrid.Children[0], 0);
             Grid.SetColumn(headerGrid.Children[1], 1);
@@ -312,8 +363,7 @@ namespace BowlingClub.Pages
             Grid.SetColumn(headerGrid.Children[3], 3);
 
             panel.Children.Add(headerGrid);
-
-            // Услуги
+            =
             foreach (var item in _itemsList)
             {
                 Grid itemGrid = new Grid();
@@ -322,29 +372,10 @@ namespace BowlingClub.Pages
                 itemGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
                 itemGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
 
-                itemGrid.Children.Add(new TextBlock
-                {
-                    Text = item.ItemName,
-                    Margin = new Thickness(2)
-                });
-                itemGrid.Children.Add(new TextBlock
-                {
-                    Text = item.Quantity.ToString(),
-                    Margin = new Thickness(2),
-                    HorizontalAlignment = HorizontalAlignment.Center
-                });
-                itemGrid.Children.Add(new TextBlock
-                {
-                    Text = $"{item.Price:F2}",
-                    Margin = new Thickness(2),
-                    HorizontalAlignment = HorizontalAlignment.Right
-                });
-                itemGrid.Children.Add(new TextBlock
-                {
-                    Text = $"{item.Total:F2}",
-                    Margin = new Thickness(2),
-                    HorizontalAlignment = HorizontalAlignment.Right
-                });
+                itemGrid.Children.Add(new TextBlock { Text = item.ItemName, Margin = new Thickness(2) });
+                itemGrid.Children.Add(new TextBlock { Text = item.Quantity.ToString(), Margin = new Thickness(2), HorizontalAlignment = HorizontalAlignment.Center });
+                itemGrid.Children.Add(new TextBlock { Text = $"{item.Price:F2}", Margin = new Thickness(2), HorizontalAlignment = HorizontalAlignment.Right });
+                itemGrid.Children.Add(new TextBlock { Text = $"{item.Total:F2}", Margin = new Thickness(2), HorizontalAlignment = HorizontalAlignment.Right });
 
                 Grid.SetColumn(itemGrid.Children[0], 0);
                 Grid.SetColumn(itemGrid.Children[1], 1);
@@ -354,15 +385,13 @@ namespace BowlingClub.Pages
                 panel.Children.Add(itemGrid);
             }
 
-            // Разделитель
             panel.Children.Add(new TextBlock
             {
                 Text = new string('─', 40),
                 FontSize = 12,
                 Margin = new Thickness(0, 10, 0, 10)
             });
-
-            // Итоговая сумма
+            
             Grid totalGrid = new Grid();
             totalGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             totalGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength() });
@@ -400,7 +429,6 @@ namespace BowlingClub.Pages
 
             panel.Children.Add(totalGrid);
 
-            // Информация об оплате
             panel.Children.Add(new TextBlock
             {
                 Text = new string('─', 40),
@@ -460,38 +488,11 @@ namespace BowlingClub.Pages
             return printGrid;
         }
 
-        // Закрытие страницы
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-            // Спрашиваем, нужно ли сохранить изменения
-            if (_currentBooking.Status != "Оплачен")
-            {
-                var result = MessageBox.Show("Статус бронирования не 'Оплачен'. Сохранить изменения?",
-                    "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
-
-                if (result == MessageBoxResult.Yes)
-                {
-                    // Обновляем статус
-                    _currentBooking.Status = "Оплачен";
-
-                    try
-                    {
-                        AppConnect.model.SaveChanges();
-                        MessageBox.Show("Статус обновлен на 'Оплачен'", "Успех",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Ошибка сохранения: {ex.Message}", "Ошибка",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
-            }
-
             NavigationService.GoBack();
         }
 
-        // Обновление чека (если были изменения)
         private void RefreshReceipt_Click(object sender, RoutedEventArgs e)
         {
             LoadBookingItems();
@@ -499,36 +500,15 @@ namespace BowlingClub.Pages
             dgReceiptItems.ItemsSource = null;
             dgReceiptItems.ItemsSource = _itemsList;
 
-            // Обновляем контекст данных
             this.DataContext = null;
             this.DataContext = _currentBooking;
+
+            LoadQR();
 
             MessageBox.Show("Чек обновлен!", "Информация",
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        // Подсчет количества позиций
-        private int GetItemsCount()
-        {
-            return _itemsList?.Sum(i => i.Quantity) ?? 0;
-        }
-
-        // Получение общей суммы прописью (опционально)
-        private string GetTotalAmountWords()
-        {
-            // Здесь можно реализовать перевод суммы в текстовый вид
-            // Например: "Одна тысяча двести рублей 00 копеек"
-            return $"{_totalAmount:F2} рублей";
-        }
-
-        // Проверка возможности печати
-        private bool CanPrint()
-        {
-            PrintDialog printDialog = new PrintDialog();
-            return printDialog.ShowDialog() == true;
-        }
-
-        // Обработчик нажатия клавиш (Ctrl+P - печать)
         protected override void OnKeyDown(System.Windows.Input.KeyEventArgs e)
         {
             base.OnKeyDown(e);
