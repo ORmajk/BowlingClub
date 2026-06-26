@@ -1,12 +1,14 @@
 ﻿using BowlingClub.AppData;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.IO;
 using ZXing;
 
 namespace BowlingClub.Pages
@@ -234,14 +236,16 @@ namespace BowlingClub.Pages
                 {
                     string filePath = saveFileDialog.FileName;
 
-                    MessageBox.Show($"Чек будет сохранен в файл: {filePath}", "Информация",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    // Создаем PDF
+                    CreatePdfReceipt(filePath);
 
+                    // Проверяем, создан ли файл
                     if (File.Exists(filePath))
                     {
                         MessageBox.Show($"Чек успешно сохранен!\nПуть: {filePath}", "Успех",
                             MessageBoxButton.OK, MessageBoxImage.Information);
 
+                        // Предлагаем открыть файл
                         var result = MessageBox.Show("Открыть сохраненный файл?", "Открыть файл",
                             MessageBoxButton.YesNo, MessageBoxImage.Question);
 
@@ -262,6 +266,123 @@ namespace BowlingClub.Pages
                 MessageBox.Show($"Ошибка экспорта: {ex.Message}", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        // Создание PDF чека
+        private void CreatePdfReceipt(string filePath)
+        {
+            try
+            {
+                // Создаем документ
+                Document document = new Document(PageSize.A5, 30, 30, 30, 30);
+
+                // Создаем writer
+                PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(filePath, FileMode.Create));
+
+                // Открываем документ
+                document.Open();
+
+                // Добавляем содержимое
+                // 1. Заголовок
+                Paragraph title = new Paragraph("БОУЛИНГ КЛУБ", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 18));
+                title.Alignment = Element.ALIGN_CENTER;
+                document.Add(title);
+
+                Paragraph subtitle = new Paragraph("ЧЕК ОПЛАТЫ", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14));
+                subtitle.Alignment = Element.ALIGN_CENTER;
+                document.Add(subtitle);
+
+                document.Add(new Paragraph(" "));
+                document.Add(new Paragraph(new string('═', 40)));
+                document.Add(new Paragraph(" "));
+
+                // 2. Информация о бронировании
+                document.Add(new Paragraph($"Номер брони: {_currentBooking.BookingNumber}", FontFactory.GetFont(FontFactory.HELVETICA, 10)));
+                document.Add(new Paragraph($"Клиент: {_currentBooking.Clients?.FullName ?? "Не указан"}"));
+                document.Add(new Paragraph($"Дорожка: {_currentBooking.Lanes?.LaneNumber ?? 0}"));
+                document.Add(new Paragraph($"Дата: {_currentBooking.StartTime:dd.MM.yyyy HH:mm}"));
+                document.Add(new Paragraph($"Длительность: {_currentBooking.DurationMinutes} мин."));
+                document.Add(new Paragraph($"Статус: {_currentBooking.Status}"));
+
+                document.Add(new Paragraph(" "));
+                document.Add(new Paragraph(new string('─', 40)));
+                document.Add(new Paragraph(" "));
+
+                // 3. Таблица услуг
+                PdfPTable table = new PdfPTable(4);
+                table.WidthPercentage = 100;
+                table.SetWidths(new float[] { 40, 15, 20, 25 });
+
+                // Заголовки таблицы
+                AddTableCell(table, "Услуга", true);
+                AddTableCell(table, "Кол-во", true);
+                AddTableCell(table, "Цена", true);
+                AddTableCell(table, "Сумма", true);
+
+                // Данные
+                foreach (var item in _itemsList)
+                {
+                    AddTableCell(table, item.ItemName);
+                    AddTableCell(table, item.Quantity.ToString());
+                    AddTableCell(table, $"{item.Price:F2} руб.");
+                    AddTableCell(table, $"{item.Total:F2} руб.");
+                }
+
+                document.Add(table);
+
+                document.Add(new Paragraph(" "));
+                document.Add(new Paragraph(new string('─', 40)));
+                document.Add(new Paragraph(" "));
+
+                // 4. Итоговая сумма
+                Paragraph total = new Paragraph($"ИТОГО К ОПЛАТЕ: {_totalAmount:F2} руб.",
+                    FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14));
+                total.Alignment = Element.ALIGN_RIGHT;
+                document.Add(total);
+
+                document.Add(new Paragraph(" "));
+                document.Add(new Paragraph(new string('─', 40)));
+                document.Add(new Paragraph(" "));
+
+                // 5. Информация об оплате
+                document.Add(new Paragraph($"Способ оплаты: {_currentBooking.PaymentMethod ?? "Не указан"}"));
+                document.Add(new Paragraph($"Дата оплаты: {DateTime.Now:dd.MM.yyyy HH:mm}"));
+
+                document.Add(new Paragraph(" "));
+                document.Add(new Paragraph(new string('═', 40)));
+                document.Add(new Paragraph(" "));
+
+                // 6. Футер
+                Paragraph footer = new Paragraph("Спасибо за оплату! Ждем вас снова!",
+                    FontFactory.GetFont(FontFactory.HELVETICA_OBLIQUE, 10));
+                footer.Alignment = Element.ALIGN_CENTER;
+                document.Add(footer);
+
+                // Закрываем документ
+                document.Close();
+                writer.Close();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Ошибка создания PDF: {ex.Message}", ex);
+            }
+        }
+
+        // Вспомогательный метод для добавления ячейки в таблицу
+        private void AddTableCell(PdfPTable table, string text, bool isHeader = false)
+        {
+            PdfPCell cell = new PdfPCell(new Phrase(text, FontFactory.GetFont(
+                isHeader ? FontFactory.HELVETICA_BOLD : FontFactory.HELVETICA,
+                isHeader ? 10 : 9)));
+
+            if (isHeader)
+            {
+                cell.BackgroundColor = BaseColor.LIGHT_GRAY;
+            }
+
+            cell.HorizontalAlignment = Element.ALIGN_LEFT;
+            cell.Padding = 5;
+            table.AddCell(cell);
         }
 
         private Grid CreatePrintVersion()
@@ -363,7 +484,7 @@ namespace BowlingClub.Pages
             Grid.SetColumn(headerGrid.Children[3], 3);
 
             panel.Children.Add(headerGrid);
-            =
+            
             foreach (var item in _itemsList)
             {
                 Grid itemGrid = new Grid();
