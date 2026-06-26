@@ -10,6 +10,7 @@
 namespace BowlingClub.AppData
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     
     public partial class LaneStatuses
@@ -26,5 +27,10 @@ namespace BowlingClub.AppData
     
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Lanes> Lanes { get; set; }
+
+        internal static IEnumerable ToList()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

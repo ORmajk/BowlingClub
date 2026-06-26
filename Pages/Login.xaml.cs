@@ -15,7 +15,6 @@ namespace BowlingClub.Pages
             InitializeComponent();
         }
 
-        // Кнопка "Войти"
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             lblError.Text = "";
@@ -41,8 +40,6 @@ namespace BowlingClub.Pages
                 lblError.Text = "Неверный логин или пароль";
             }
         }
-
-        // Кнопка "Регистрация" — переходим на страницу регистрации
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             NavigationService?.Navigate(new Register());

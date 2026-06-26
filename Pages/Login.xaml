@@ -34,12 +34,14 @@
                 Background="#3A8DFF"
                 Foreground="White"
                 FontWeight="Bold"
+                FontSize="24"
                 Margin="0 0 0 15" Click="Button_Click"/>
 
                 <Button Content="Регистрация"
                 Height="40"
                 Background="#3A8DFF"
                 Foreground="White"
+                FontSize="24"
                 FontWeight="Bold" Click="Button_Click_1"/>
 
                 <TextBlock x:Name="lblError"

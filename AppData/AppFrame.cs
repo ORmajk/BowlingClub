@@ -12,3 +12,6 @@ namespace BowlingClub.AppData
         public static Frame FrameMain;
     }
 }
+
+
+

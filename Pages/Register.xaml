@@ -21,31 +21,33 @@
                                HorizontalAlignment="Center"
                                Margin="0 0 0 18"/>
 
-                    <TextBlock Text="ФИО" Foreground="White" Margin="0 0 0 5"/>
-                    <TextBox x:Name="tbFullName" Height="36" Margin="0 0 0 12"/>
+                    <TextBlock Text="ФИО" Foreground="White" Margin="0 0 0 5" FontSize="16"/>
+                    <TextBox x:Name="tbFullName" Height="36" Margin="0 0 0 12" FontSize="16"/>
 
-                    <TextBlock Text="Email" Foreground="White" Margin="0 0 0 5"/>
-                    <TextBox x:Name="tbEmail" Height="36" Margin="0 0 0 12"/>
+                    <TextBlock Text="Email" Foreground="White" Margin="0 0 0 5" FontSize="16"/>
+                    <TextBox x:Name="tbEmail" Height="36" Margin="0 0 0 12" FontSize="16"/>
 
-                    <TextBlock Text="Логин" Foreground="White" Margin="0 0 0 5"/>
-                    <TextBox x:Name="tbLogin" Height="36" Margin="0 0 0 12"/>
+                    <TextBlock Text="Логин" Foreground="White" Margin="0 0 0 5" FontSize="16"/>
+                    <TextBox x:Name="tbLogin" Height="36" Margin="0 0 0 12" FontSize="16"/>
 
-                    <TextBlock Text="Телефон" Foreground="White" Margin="0 0 0 5"/>
-                    <TextBox x:Name="tbPhone" Height="36" Margin="0 0 0 12"/>
+                    <TextBlock Text="Телефон" Foreground="White" Margin="0 0 0 5" FontSize="16"/>
+                    <TextBox x:Name="tbPhone" Height="36" Margin="0 0 0 12" FontSize="16"/>
 
-                    <TextBlock Text="Пароль" Foreground="White" Margin="0 0 0 5"/>
-                    <PasswordBox x:Name="pbPassword" Height="36" Margin="0 0 0 12"/>
+                    <TextBlock Text="Пароль" Foreground="White" Margin="0 0 0 5" FontSize="16"/>
+                    <PasswordBox x:Name="pbPassword" Height="36" Margin="0 0 0 12" FontSize="16"/>
 
-                    <TextBlock Text="Подтвердите пароль" Foreground="White" Margin="0 0 0 5"/>
-                    <PasswordBox x:Name="pbConfirm" Height="36" Margin="0 0 0 18"/>
+                    <TextBlock Text="Подтвердите пароль" Foreground="White" Margin="0 0 0 5" FontSize="16"/>
+                    <PasswordBox x:Name="pbConfirm" Height="36" Margin="0 0 0 18" FontSize="16"/>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0 0 0 10">
                         <Button Content="Зарегистрироваться"
-                                Width="160" Height="40"
+                                Width="182" Height="40"
+                                FontSize="16"
                                 Background="#3A8DFF" Foreground="White" FontWeight="Bold"
                                 Click="Register_Click" Margin="0,0,12,0"/>
                         <Button Content="Назад к входу"
                                 Width="140" Height="40"
+                                FontSize="16"
                                 Background="#444" Foreground="White"
                                 Click="BackToLogin_Click"/>
                     </StackPanel>

@@ -1,8 +1,10 @@
 ﻿using BowlingClub.AppData;
 using System;
+using System.Data.Entity;
 using System.Data.Entity.SqlServer;
 using System.Linq;
-using System.Data.Entity;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace BowlingClub.Database
 {
@@ -22,6 +24,72 @@ namespace BowlingClub.Database
             {
             }
         }
+
+        public static void RefreshTable<T>(DataGrid grid) where T : class
+        {
+            if (grid == null) return;
+
+            try
+            {
+                // 1. Сбрасываем локальный кэш Entity Framework только для сущностей типа T
+                foreach (var entry in AppConnect.model.ChangeTracker.Entries<T>())
+                {
+                    entry.Reload();
+                }
+
+                // 2. Жадная загрузка (Eager Loading) в зависимости от типа таблицы
+                if (typeof(T) == typeof(Events))
+                {
+                    // Для Игр принудительно подтягиваем регистрации, клиентов и дорожки
+                    grid.ItemsSource = AppConnect.model.Events
+                        .Include(e => e.EventRegistrations.Select(er => er.Clients))
+                        .Include(e => e.Lanes)
+                        .ToList();
+                }
+                else if (typeof(T) == typeof(Bookings))
+                {
+                    // Для Бронирований принудительно подтягиваем клиентов, дорожки и доп. услуги (чековые позиции)
+                    grid.ItemsSource = AppConnect.model.Bookings
+                        .Include(b => b.Clients)
+                        .Include(b => b.Lanes)
+                        .Include(b => b.BookingItems)
+                        .ToList();
+                }
+                else
+                {
+                    // Для всех остальных стандартных таблиц (Клиенты, Инвентарь и т.д.)
+                    grid.ItemsSource = AppConnect.model.Set<T>().ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при обновлении данных таблицы {typeof(T).Name}: {ex.Message}",
+                                "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+
+        public static string GetClientsList(Events ev)
+        {
+            if (ev == null || ev.EventRegistrations == null || !ev.EventRegistrations.Any())
+                return "Нет участников";
+
+            // Собираем FullName клиентов через запятую
+            var names = ev.EventRegistrations
+                .Where(er => er.Clients != null)
+                .Select(er => er.Clients.FullName);
+
+            return string.Join(", ", names);
+        }
+
+        private void ClientsList_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBlock textBlock && textBlock.DataContext is Events currentEvent)
+            {
+                textBlock.Text = DatabaseHelper.GetClientsList(currentEvent);
+            }
+        }
+
 
         public Users Authenticate(string login, string password)
         {
@@ -131,19 +199,21 @@ namespace BowlingClub.Database
         }
 
         // -------------------- INVENTORY --------------------
-        public IQueryable<InventoryItems> GetInventoryItems(string search = null)
+        // В DatabaseHelper.cs
+        public IQueryable<InventoryItems> GetInventoryItems(string searchTerm = "")
         {
-            var q = _ctx.InventoryItems.AsQueryable();
+            var query = AppConnect.model.InventoryItems
+                .Include(i => i.InventoryStatuses)
+                .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(search))
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                string s = search.Trim();
-                q = q.Where(i =>
-                    i.Name.Contains(s) ||
-                    i.Type.Contains(s));
+                query = query.Where(i => i.Name.Contains(searchTerm) ||
+                                          i.Type.Contains(searchTerm) ||
+                                          i.InventoryStatuses.Name.Contains(searchTerm));
             }
 
-            return q.OrderBy(i => i.Name);
+            return query.OrderBy(i => i.Name);
         }
 
         public bool DeleteInventoryItem(int id)
@@ -227,6 +297,18 @@ namespace BowlingClub.Database
             _ctx.SaveChanges();
             return true;
         }
+        public static string GetBookingItemsList(Bookings booking)
+        {
+            if (booking == null || booking.BookingItems == null || !booking.BookingItems.Any())
+                return "Нет услуг";
+
+            // Собираем название услуги и её количество
+            var items = booking.BookingItems
+                .Select(bi => $"{bi.ItemName} (x{bi.Quantity})");
+
+            return string.Join(", ", items);
+        }
+
 
         // -------------------- LOGGING --------------------
         public void LogAction(int userId, string actionType, string details)
@@ -241,7 +323,7 @@ namespace BowlingClub.Database
 
             _ctx.UserActions.Add(log);
             _ctx.SaveChanges();
-        }
+        } 
 
         public void Dispose()
         {

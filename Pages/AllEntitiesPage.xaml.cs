@@ -1,10 +1,11 @@
 ﻿using BowlingClub.AppData;
 using BowlingClub.Database;
 using System;
+using System.Data.Entity;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Data.Entity;
+using System.Windows.Navigation;
 
 namespace BowlingClub.Pages
 {
@@ -18,7 +19,26 @@ namespace BowlingClub.Pages
             InitializeComponent();
             _currentUser = currentUser;
             ConfigurePermissions();
-            LoadAll();
+
+            // Подписываемся на событие загрузки страницы
+            this.Loaded += AllEntitiesPage_Loaded;
+        }
+
+        // Обработчик события загрузки страницы
+        private void AllEntitiesPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Принудительно обновляем данные при загрузке страницы
+            RefreshAllData();
+            txtStatus.Text = $"Данные загружены: {DateTime.Now:g}";
+        }
+
+        // В WPF используем событие Initialized или Loaded для обновления при возврате
+        // Альтернативный способ - использовать NavigationService.Navigated
+        private void Page_Navigated(object sender, NavigationEventArgs e)
+        {
+            // Обновляем данные при навигации
+            RefreshAllData();
+            txtStatus.Text = $"Данные обновлены: {DateTime.Now:g}";
         }
 
         private void ConfigurePermissions()
@@ -67,48 +87,117 @@ namespace BowlingClub.Pages
             btnCancelBooking.IsEnabled = canDelete;
         }
 
-        private void LoadAll()
+        // Главный метод обновления всех данных
+        private void RefreshAllData()
         {
-            LoadLanes();
-            LoadGames();
-            LoadInventory();
-            LoadClients();
-            LoadBookings();
-            txtStatus.Text = $"Данные загружены: {DateTime.Now:g}";
+            try
+            {
+                // Очищаем кэш контекста для получения свежих данных
+                foreach (var entry in AppConnect.model.ChangeTracker.Entries().ToList())
+                {
+                    if (entry.State != System.Data.Entity.EntityState.Detached)
+                    {
+                        entry.Reload();
+                    }
+                }
+
+                // Загружаем все данные
+                LoadLanes();
+                LoadGames();
+                LoadInventory();
+                LoadClients();
+                LoadBookings();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка обновления данных: {ex.Message}");
+                // Не показываем MessageBox, чтобы не раздражать пользователя
+            }
         }
 
-        private void RefreshAll_Click(object sender, RoutedEventArgs e) => LoadAll();
+        private void LoadLanes()
+        {
+            try
+            {
+                var lanes = _db.GetLanes(txtGlobalSearch.Text).ToList();
+                dgLanes.ItemsSource = null;
+                dgLanes.ItemsSource = lanes;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки дорожек: {ex.Message}");
+            }
+        }
 
-        private void LoadLanes() =>
-            dgLanes.ItemsSource = _db.GetLanes(txtGlobalSearch.Text).ToList();
+        private void LoadGames()
+        {
+            try
+            {
+                var games = _db.GetEvents(txtGlobalSearch.Text).ToList();
+                dgGames.ItemsSource = null;
+                dgGames.ItemsSource = games;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки событий: {ex.Message}");
+            }
+        }
 
-        private void LoadGames() =>
-            dgGames.ItemsSource = _db.GetEvents(txtGlobalSearch.Text).ToList();
+        private void LoadInventory()
+        {
+            try
+            {
+                var inventory = _db.GetInventoryItems(txtGlobalSearch.Text).ToList();
+                dgInventory.ItemsSource = null;
+                dgInventory.ItemsSource = inventory;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки инвентаря: {ex.Message}");
+            }
+        }
 
-        private void LoadInventory() =>
-            dgInventory.ItemsSource = _db.GetInventoryItems(txtGlobalSearch.Text).ToList();
+        private void LoadClients()
+        {
+            try
+            {
+                var clients = _db.GetClients(txtGlobalSearch.Text).ToList();
+                dgClients.ItemsSource = null;
+                dgClients.ItemsSource = clients;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки клиентов: {ex.Message}");
+            }
+        }
 
-        private void LoadClients() =>
-            dgClients.ItemsSource = _db.GetClients(txtGlobalSearch.Text).ToList();
-
-        private void LoadBookings() =>
-            dgBookings.ItemsSource = _db.GetBookings(txtGlobalSearch.Text).ToList();
+        private void LoadBookings()
+        {
+            try
+            {
+                var bookings = _db.GetBookings(txtGlobalSearch.Text).ToList();
+                dgBookings.ItemsSource = null;
+                dgBookings.ItemsSource = bookings;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки бронирований: {ex.Message}");
+            }
+        }
 
         // -------------------- LANES --------------------
         private void AddLane_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
-
-            //NavigationService.Navigate(new LaneEditPage(null));
+            NavigationService.Navigate(new LaneEditPage(null));
         }
 
         private void EditLane_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
-
             if (dgLanes.SelectedItem is Lanes lane)
             {
-                //NavigationService.Navigate(new LaneEditPage(lane));
+                NavigationService.Navigate(new LaneEditPage(lane));
             }
             else MessageBox.Show("Выберите дорожку.");
         }
@@ -116,7 +205,6 @@ namespace BowlingClub.Pages
         private void DeleteLane_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin")) { ShowNoRights(); return; }
-
             if (dgLanes.SelectedItem is Lanes lane)
             {
                 if (MessageBox.Show($"Удалить дорожку №{lane.LaneNumber}?", "Подтверждение",
@@ -137,17 +225,15 @@ namespace BowlingClub.Pages
         private void AddGame_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
-
-           // NavigationService.Navigate(new EventEditPage(null));
+            NavigationService.Navigate(new EventEditPage(null));
         }
 
         private void EditGame_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
-
             if (dgGames.SelectedItem is Events ev)
             {
-               // NavigationService.Navigate(new EventEditPage(ev));
+                NavigationService.Navigate(new EventEditPage(ev));
             }
             else MessageBox.Show("Выберите событие.");
         }
@@ -155,7 +241,6 @@ namespace BowlingClub.Pages
         private void DeleteGame_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin")) { ShowNoRights(); return; }
-
             if (dgGames.SelectedItem is Events ev)
             {
                 if (MessageBox.Show($"Удалить событие \"{ev.Name}\"?", "Подтверждение",
@@ -175,26 +260,23 @@ namespace BowlingClub.Pages
         // -------------------- INVENTORY --------------------
         private void AddInventory_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
-
-           // NavigationService.Navigate(new InventoryEditPage(null));
+            if (!HasRole("Admin", "Manager")) { ShowNoRights(); return; }
+            NavigationService.Navigate(new InventoryEditPage(null));
         }
 
         private void EditInventory_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
-
-            if (dgInventory.SelectedItem is InventoryItems it)
+            if (!HasRole("Admin", "Manager")) { ShowNoRights(); return; }
+            if (dgInventory.SelectedItem is InventoryItems selectedItem)
             {
-                //NavigationService.Navigate(new InventoryEditPage(it));
+                NavigationService.Navigate(new InventoryEditPage(selectedItem));
             }
-            else MessageBox.Show("Выберите элемент.");
+            else MessageBox.Show("Выберите элемент инвентаря из таблицы.");
         }
 
         private void DeleteInventory_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin")) { ShowNoRights(); return; }
-
             if (dgInventory.SelectedItem is InventoryItems it)
             {
                 if (MessageBox.Show($"Удалить \"{it.Name}\"?", "Подтверждение",
@@ -213,26 +295,23 @@ namespace BowlingClub.Pages
         // -------------------- CLIENTS --------------------
         private void AddClient_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
-
-           //NavigationService.Navigate(new ClientEditPage(null));
+            if (!HasRole("Admin", "Manager", "Moderator")) { ShowNoRights(); return; }
+            NavigationService.Navigate(new ClientEditPage(null));
         }
 
         private void EditClient_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
-
-            if (dgClients.SelectedItem is Clients c)
+            if (!HasRole("Admin", "Manager", "Moderator")) { ShowNoRights(); return; }
+            if (dgClients.SelectedItem is Clients selectedClient)
             {
-                //NavigationService.Navigate(new ClientEditPage(c));
+                NavigationService.Navigate(new ClientEditPage(selectedClient));
             }
-            else MessageBox.Show("Выберите клиента.");
+            else MessageBox.Show("Выберите клиента из таблицы для редактирования.");
         }
 
         private void DeleteClient_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin")) { ShowNoRights(); return; }
-
             if (dgClients.SelectedItem is Clients c)
             {
                 if (MessageBox.Show($"Удалить клиента \"{c.FullName}\"?", "Подтверждение",
@@ -251,26 +330,23 @@ namespace BowlingClub.Pages
         // -------------------- BOOKINGS --------------------
         private void AddBooking_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
-
-            //NavigationService.Navigate(new BookingEditPage(null));
+            if (!HasRole("Admin", "Manager", "Moderator")) { ShowNoRights(); return; }
+            NavigationService.Navigate(new BookingEditPage(null));
         }
 
         private void EditBooking_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
-
-            if (dgBookings.SelectedItem is Bookings b)
+            if (!HasRole("Admin", "Manager", "Moderator")) { ShowNoRights(); return; }
+            if (dgBookings.SelectedItem is Bookings selectedBooking)
             {
-                //NavigationService.Navigate(new BookingEditPage(b));
+                NavigationService.Navigate(new BookingEditPage(selectedBooking));
             }
-            else MessageBox.Show("Выберите бронирование.");
+            else MessageBox.Show("Выберите бронирование из таблицы для редактирования.");
         }
 
         private void CancelBooking_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin")) { ShowNoRights(); return; }
-
             if (dgBookings.SelectedItem is Bookings b)
             {
                 if (MessageBox.Show($"Отменить бронирование Id={b.Id}?", "Подтверждение",
@@ -286,6 +362,42 @@ namespace BowlingClub.Pages
             else MessageBox.Show("Выберите бронирование.");
         }
 
+        private void ClientsList_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBlock textBlock && textBlock.DataContext is Events currentEvent)
+            {
+                textBlock.Text = DatabaseHelper.GetClientsList(currentEvent);
+            }
+        }
+
+        private void BookingItemsList_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBlock textBlock && textBlock.DataContext is Bookings currentBooking)
+            {
+                textBlock.Text = DatabaseHelper.GetBookingItemsList(currentBooking);
+            }
+        }
+
+        private void OpenReceipt_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is Bookings selectedBooking)
+            {
+                string status = selectedBooking.Status?.Trim();
+
+                if (status == "Оплачен")
+                {
+                    NavigationService.Navigate(new ReceiptPage(selectedBooking));
+                }
+                else
+                {
+                    MessageBox.Show($"Невозможно просмотреть чек. Данное бронирование еще не оплачено! Текущий статус: \"{status}\".",
+                                    "Внимание",
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Warning);
+                }
+            }
+        }
+
         // -------------------- HELPERS --------------------
         private bool HasRole(params string[] roles)
         {
@@ -297,6 +409,18 @@ namespace BowlingClub.Pages
         {
             MessageBox.Show("Недостаточно прав.", "Доступ запрещён",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        private void RefreshAll_Click(object sender, RoutedEventArgs e)
+        {
+            RefreshAllData();
+            txtStatus.Text = $"Данные обновлены: {DateTime.Now:g}";
+        }
+
+        private void txtGlobalSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // Обновляем данные при изменении поискового запроса
+            RefreshAllData();
         }
     }
 }
