@@ -15,7 +15,6 @@
 
                 <TextBlock x:Name="tbTitle" Text="Добавление брони" FontSize="26" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,15"/>
 
-                <!-- Основные поля бронирования -->
                 <TextBlock Text="Номер бронирования" Foreground="White" Margin="0,0,0,5"/>
                 <TextBox x:Name="txtBookingNumber" Height="35" FontSize="16" Padding="3" Margin="0,0,0,10"/>
 
@@ -31,15 +30,12 @@
                 <TextBlock Text="Длительность (минут)" Foreground="White" Margin="0,0,0,5"/>
                 <TextBox x:Name="txtDuration" Height="35" FontSize="16" Padding="3" Margin="0,0,0,10"/>
 
-                <!-- Статус бронирования -->
                 <TextBlock Text="Статус бронирования:" Foreground="White" FontSize="14" Margin="0,0,0,5"/>
                 <ComboBox x:Name="cbStatus" Height="35" FontSize="16" Margin="0,0,0,10"/>
 
-                <!-- Способ оплаты -->
                 <TextBlock Text="Способ оплаты:" Foreground="White" FontSize="14" Margin="0,0,0,5"/>
                 <ComboBox x:Name="cbPaymentMethod" Height="35" FontSize="16" Margin="0,0,0,15"/>
 
-                <!-- Поля быстрого добавления услуги с подписями -->
                 <Grid Margin="0,0,0,10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -54,12 +50,10 @@
                         <ColumnDefinition Width="75"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Строка 0: Подписи к полям -->
                     <TextBlock Text="Название услуги" Foreground="White" FontSize="12" Margin="0,0,5,3" Grid.Row="0" Grid.Column="0"/>
                     <TextBlock Text="Кол-во" Foreground="White" FontSize="12" Margin="0,0,5,3" Grid.Row="0" Grid.Column="1"/>
                     <TextBlock Text="Цена" Foreground="White" FontSize="12" Margin="0,0,5,3" Grid.Row="0" Grid.Column="2"/>
 
-                    <!-- Строка 1: Поля ввода и кнопки -->
                     <ComboBox x:Name="cbItemName" Height="30" Margin="0,0,5,0" FontSize="14" 
                               Grid.Row="1" Grid.Column="0" SelectionChanged="cbItemName_SelectionChanged"/>
 
@@ -76,7 +70,6 @@
                             FontWeight="Bold" Height="30" Grid.Row="1" Grid.Column="4" VerticalAlignment="Bottom"/>
                 </Grid>
 
-                <!-- Таблица услуг чека -->
                 <DataGrid x:Name="dgBookingItems" AutoGenerateColumns="False" Height="110" Margin="0,0,0,10" IsReadOnly="True" Background="#1E1E1E" RowHeight="30" FontSize="14">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Услуга" Binding="{Binding ItemName}" Width="*"/>
@@ -86,13 +79,11 @@
                     </DataGrid.Columns>
                 </DataGrid>
 
-                <!-- Итоговая автоматическая сумма -->
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,15">
                     <TextBlock Text="Итого к оплате: " Foreground="White" FontSize="18" FontWeight="Bold"/>
                     <TextBlock x:Name="lblTotalAmount" Text="0,00 руб." Foreground="#3A8DFF" FontSize="18" FontWeight="Bold"/>
                 </StackPanel>
 
-                <!-- Кнопки управления -->
                 <Button Content="Сохранить" Height="40" Background="#3A8DFF" Foreground="White" FontWeight="Bold" Margin="0,0,0,10" Click="Save_Click"/>
                 <Button Content="Отмена" Height="40" Background="#444444" Foreground="White" FontWeight="Bold" Click="Cancel_Click"/>
 

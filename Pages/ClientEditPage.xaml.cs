@@ -16,9 +16,6 @@ using System.Windows.Shapes;
 
 namespace BowlingClub.Pages
 {
-    /// <summary>
-    /// Логика взаимодействия для ClientEditPage.xaml
-    /// </summary>
     public partial class ClientEditPage : Page
     {
         private Clients _currentClient;
@@ -30,12 +27,11 @@ namespace BowlingClub.Pages
 
             lblError.Text = "";
 
-            // Определение режима работы страницы
             if (selectedClient == null)
             {
                 _currentClient = new Clients();
-                _currentClient.RegistrationDate = DateTime.Now; // Устанавливаем текущую дату для нового клиента
-                _currentClient.Points = 0; // Изначально баллов 0
+                _currentClient.RegistrationDate = DateTime.Now; 
+                _currentClient.Points = 0; 
                 _isNew = true;
                 tbTitle.Text = "Добавление клиента";
             }
@@ -46,7 +42,6 @@ namespace BowlingClub.Pages
                 tbTitle.Text = "Редактирование клиента";
             }
 
-            // Заполнение полей формы данными из сущности
             txtFullName.Text = _currentClient.FullName;
             txtPhone.Text = _currentClient.Phone;
             txtEmail.Text = _currentClient.Email;
@@ -56,9 +51,8 @@ namespace BowlingClub.Pages
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            lblError.Text = ""; // Очищаем поле ошибок
+            lblError.Text = "";
 
-            // 1. Валидация полей через текстовый блок lblError
             if (string.IsNullOrWhiteSpace(txtFullName.Text))
             {
                 lblError.Text = "Ошибка: Заполните ФИО клиента.";
@@ -75,14 +69,14 @@ namespace BowlingClub.Pages
                 return;
             }
 
-            // 2. Перенос измененных данных с формы в объект
+            
             _currentClient.FullName = txtFullName.Text;
             _currentClient.Phone = txtPhone.Text;
             _currentClient.Email = txtEmail.Text;
             _currentClient.Points = points;
             _currentClient.IsSubscribedToAl = chbSubscribed.IsChecked ?? false;
 
-            // 3. Запись в БД ADO.NET
+           
             try
             {
                 if (_isNew)

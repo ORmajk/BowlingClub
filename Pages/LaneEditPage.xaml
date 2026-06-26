@@ -9,11 +9,9 @@
       Title="LaneEditPage">
 
     <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20">
-        <!-- Контейнер формы в стиле окна авторизации -->
         <Border Background="#1E1E1E" CornerRadius="10" Padding="30" Width="450">
             <StackPanel>
 
-                <!-- Заголовок страницы -->
                 <TextBlock x:Name="tbTitle" 
                            Text="Добавление дорожки" 
                            Foreground="White" 
@@ -23,14 +21,12 @@
 
                 <TextBlock Text="Фотография дорожки" Foreground="White" Margin="0,0,0,5" FontSize="14" Width="360"/>
                 <Border BorderThickness="1" BorderBrush="#444444" CornerRadius="5" Height="150" Margin="0,0,0,10" Background="#1A1A1A" Width="360">
-                    <!-- Добавлено свойство RenderOptions для четкости и правильный Stretch -->
                     <Image x:Name="imgLane" 
                            Stretch="Uniform" 
                            Margin="5" 
                            RenderOptions.BitmapScalingMode="HighQuality"/>
                 </Border>
 
-                <!-- Кнопка Выбрать фото -->
                 <Button Content="Выбрать фото" 
                         Click="SelectPhoto_Click"
                         Background="#3A8DFF"
@@ -47,27 +43,21 @@
                     </Button.Resources>
                 </Button>
 
-                <!-- Поле: Номер дорожки -->
                 <TextBlock Text="Номер дорожки" Foreground="White" Margin="0,0,0,5" FontSize="14" Width="360"/>
                 <TextBox x:Name="txtLaneNumber" Height="35" FontSize="16" Padding="5" Background="White" BorderThickness="0" Margin="0,0,0,15" Width="360"/>
 
-                <!-- Поле: Вместимость -->
                 <TextBlock Text="Вместимость (чел.)" Foreground="White" Margin="0,0,0,5" FontSize="14" Width="360"/>
                 <TextBox x:Name="txtCapacity" Height="35" FontSize="16" Padding="5" Background="White" BorderThickness="0" Margin="0,0,0,15" Width="360"/>
 
-                <!-- Поле: Цена за час -->
                 <TextBlock Text="Цена за час (руб.)" Foreground="White" Margin="0,0,0,5" FontSize="14" Width="360"/>
                 <TextBox x:Name="txtPrice" Height="35" FontSize="16" Padding="5" Background="White" BorderThickness="0" Margin="0,0,0,15" Width="360"/>
-
-                <!-- Поле: Тип дорожки -->
+               
                 <TextBlock Text="Тип дорожки" Foreground="White" Margin="0,0,0,5" FontSize="14" Width="360"/>
                 <ComboBox x:Name="cbLaneType" Height="35" FontSize="16" Margin="0,0,0,15" DisplayMemberPath="Name" SelectedValuePath="Id" Width="360"/>
 
-                <!-- Поле: Статус дорожки -->
                 <TextBlock Text="Статус дорожки" Foreground="White" Margin="0,0,0,5" FontSize="14" Width="360"/>
                 <ComboBox x:Name="cbLaneStatus" Height="35" FontSize="16" Margin="0,0,0,15" DisplayMemberPath="Name" SelectedValuePath="Id" Width="360"/>
 
-                <!-- ПОЛЕ ВЫВОДА ОШИБОК (как на вашем скриншоте) -->
                 <TextBlock x:Name="lblError" 
                            Foreground="OrangeRed" 
                            FontSize="14" 
@@ -75,7 +65,6 @@
                            TextWrapping="Wrap" 
                            HorizontalAlignment="Center" Width="362"/>
 
-                <!-- Кнопка: Сохранить -->
                 <Button Content="Сохранить" 
                         Click="Save_Click"
                         Background="#3A8DFF"
@@ -92,7 +81,6 @@
                     </Button.Resources>
                 </Button>
 
-                <!-- Кнопка: Отмена -->
                 <Button Content="Отмена" 
                         Click="Cancel_Click"
                         Background="#444444" 

@@ -9,13 +9,11 @@
       Title="InventoryEditPage">
 
     <Grid Background="#1E1E1E">
-        <!-- Карточка в стиле формы Login -->
         <Border Width="480" Height="620" Padding="20" Background="#2A2A2A" CornerRadius="10"
                 VerticalAlignment="Center" HorizontalAlignment="Center">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel>
 
-                    <!-- Заголовок страницы -->
                     <TextBlock x:Name="tbTitle" 
                                Text="Добавление инвентаря" 
                                FontSize="26" 
@@ -23,27 +21,21 @@
                                HorizontalAlignment="Center" 
                                Margin="0,0,0,20"/>
 
-                    <!-- Поле: Название -->
                     <TextBlock Text="Название" Foreground="White" Margin="0,0,0,5"/>
                     <TextBox x:Name="txtItemName" Height="35" FontSize="18" Padding="3" Margin="0,0,0,15"/>
 
-                    <!-- Поле: Тип инвентаря -->
                     <TextBlock Text="Тип инвентаря" Foreground="White" Margin="0,0,0,5"/>
                     <TextBox x:Name="txtType" Height="35" FontSize="18" Padding="3" Margin="0,0,0,15" ToolTip="Например: Шары, Обувь"/>
 
-                    <!-- Поле: Размер или Вес -->
                     <TextBlock Text="Размер / Вес" Foreground="White" Margin="0,0,0,5"/>
                     <TextBox x:Name="txtSizeOrWeight" Height="35" FontSize="18" Padding="3" Margin="0,0,0,15"/>
 
-                    <!-- Поле: Количество -->
                     <TextBlock Text="Количество (шт.)" Foreground="White" Margin="0,0,0,5"/>
                     <TextBox x:Name="txtQuantity" Height="35" FontSize="18" Padding="3" Margin="0,0,0,15"/>
 
-                    <!-- Поле: Статус (из БД) -->
                     <TextBlock Text="Статус инвентаря" Foreground="White" Margin="0,0,0,5"/>
                     <ComboBox x:Name="cbStatus" Height="35" FontSize="18" Margin="0,0,0,25" DisplayMemberPath="Name" SelectedValuePath="Id"/>
 
-                    <!-- Кнопка: Сохранить -->
                     <Button Content="Сохранить" 
                             Height="40" 
                             Background="#3A8DFF" 
@@ -52,7 +44,6 @@
                             Margin="0,0,0,10" 
                             Click="Save_Click"/>
 
-                    <!-- Кнопка: Отмена -->
                     <Button Content="Отмена" 
                             Height="40" 
                             Background="#444444" 
@@ -60,7 +51,6 @@
                             FontWeight="Bold" 
                             Click="Cancel_Click"/>
 
-                    <!-- ПОЛЕ ВЫВОДА ОШИБОК -->
                     <TextBlock x:Name="lblError" 
                                Foreground="OrangeRed" 
                                FontSize="14" 

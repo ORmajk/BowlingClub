@@ -20,23 +20,17 @@ namespace BowlingClub.Pages
             _currentUser = currentUser;
             ConfigurePermissions();
 
-            // Подписываемся на событие загрузки страницы
             this.Loaded += AllEntitiesPage_Loaded;
         }
 
-        // Обработчик события загрузки страницы
         private void AllEntitiesPage_Loaded(object sender, RoutedEventArgs e)
         {
-            // Принудительно обновляем данные при загрузке страницы
             RefreshAllData();
             txtStatus.Text = $"Данные загружены: {DateTime.Now:g}";
         }
 
-        // В WPF используем событие Initialized или Loaded для обновления при возврате
-        // Альтернативный способ - использовать NavigationService.Navigated
         private void Page_Navigated(object sender, NavigationEventArgs e)
         {
-            // Обновляем данные при навигации
             RefreshAllData();
             txtStatus.Text = $"Данные обновлены: {DateTime.Now:g}";
         }
@@ -87,12 +81,10 @@ namespace BowlingClub.Pages
             btnCancelBooking.IsEnabled = canDelete;
         }
 
-        // Главный метод обновления всех данных
         private void RefreshAllData()
         {
             try
             {
-                // Очищаем кэш контекста для получения свежих данных
                 foreach (var entry in AppConnect.model.ChangeTracker.Entries().ToList())
                 {
                     if (entry.State != System.Data.Entity.EntityState.Detached)
@@ -100,8 +92,6 @@ namespace BowlingClub.Pages
                         entry.Reload();
                     }
                 }
-
-                // Загружаем все данные
                 LoadLanes();
                 LoadGames();
                 LoadInventory();
@@ -111,7 +101,6 @@ namespace BowlingClub.Pages
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Ошибка обновления данных: {ex.Message}");
-                // Не показываем MessageBox, чтобы не раздражать пользователя
             }
         }
 
@@ -185,7 +174,7 @@ namespace BowlingClub.Pages
             }
         }
 
-        // -------------------- LANES --------------------
+        //LANES
         private void AddLane_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
@@ -221,7 +210,7 @@ namespace BowlingClub.Pages
             else MessageBox.Show("Выберите дорожку.");
         }
 
-        // -------------------- EVENTS --------------------
+        //EVENTS
         private void AddGame_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin", "Moderator", "Manager")) { ShowNoRights(); return; }
@@ -257,7 +246,7 @@ namespace BowlingClub.Pages
             else MessageBox.Show("Выберите событие.");
         }
 
-        // -------------------- INVENTORY --------------------
+        //INVENTORY
         private void AddInventory_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin", "Manager")) { ShowNoRights(); return; }
@@ -292,7 +281,7 @@ namespace BowlingClub.Pages
             else MessageBox.Show("Выберите элемент.");
         }
 
-        // -------------------- CLIENTS --------------------
+        //CLIENTS
         private void AddClient_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin", "Manager", "Moderator")) { ShowNoRights(); return; }
@@ -327,7 +316,7 @@ namespace BowlingClub.Pages
             else MessageBox.Show("Выберите клиента.");
         }
 
-        // -------------------- BOOKINGS --------------------
+        //BOOKINGS
         private void AddBooking_Click(object sender, RoutedEventArgs e)
         {
             if (!HasRole("Admin", "Manager", "Moderator")) { ShowNoRights(); return; }
@@ -398,7 +387,6 @@ namespace BowlingClub.Pages
             }
         }
 
-        // -------------------- HELPERS --------------------
         private bool HasRole(params string[] roles)
         {
             if (_currentUser == null) return false;
@@ -419,7 +407,6 @@ namespace BowlingClub.Pages
 
         private void txtGlobalSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
-            // Обновляем данные при изменении поискового запроса
             RefreshAllData();
         }
     }

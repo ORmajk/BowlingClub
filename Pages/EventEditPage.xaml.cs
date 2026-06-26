@@ -16,9 +16,6 @@ using System.Windows.Shapes;
 
 namespace BowlingClub.Pages
 {
-    /// <summary>
-    /// Логика взаимодействия для EventEditPage.xaml
-    /// </summary>
     public partial class EventEditPage : Page
     {
         private Events _currentEvent;

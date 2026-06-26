@@ -13,10 +13,8 @@ namespace BowlingClub.Pages
         private Bookings _currentBooking;
         private bool _isNew = false;
 
-        // Список текущих услуг для этой брони (отображается в таблице)
         private List<BookingItems> _itemsList = new List<BookingItems>();
 
-        // ШАБЛОНЫ УСЛУГ ИЗ МОДЕЛИ БД: Задаем прейскурант цен напрямую через объекты BookingItems
         private List<BookingItems> _availableServices = new List<BookingItems>
         {
             new BookingItems { ItemName = "Аренда дорожки", Price = 1200.00m },
@@ -30,7 +28,6 @@ namespace BowlingClub.Pages
             InitializeComponent();
             lblError.Text = "";
 
-            // Загрузка всех справочников из БД
             try
             {
                 LoadReferenceData();
@@ -42,7 +39,6 @@ namespace BowlingClub.Pages
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
-            // Проверка режима работы страницы
             if (selectedBooking == null)
             {
                 _currentBooking = new Bookings();
@@ -51,7 +47,6 @@ namespace BowlingClub.Pages
                 tbTitle.Text = "Добавление брони";
                 txtBookingNumber.Text = "BR-" + DateTime.Now.ToString("yyMMddHHmmss");
 
-                // Для новой записи устанавливаем статус по умолчанию
                 cbStatus.SelectedItem = "Создан";
                 cbPaymentMethod.SelectedIndex = 0;
             }
@@ -62,11 +57,9 @@ namespace BowlingClub.Pages
                 tbTitle.Text = "Редактирование брони";
                 txtBookingNumber.Text = _currentBooking.BookingNumber;
 
-                // Загружаем сохраненные услуги из БД для этого бронирования
                 _itemsList = AppConnect.model.BookingItems.Where(bi => bi.BookingId == _currentBooking.Id).ToList();
             }
 
-            // Установка выбранных значений
             if (cbClient.ItemsSource != null && cbClient.ItemsSource.Cast<object>().Any())
             {
                 cbClient.SelectedValue = _currentBooking.ClientId;
@@ -80,7 +73,6 @@ namespace BowlingClub.Pages
             dpStartDate.SelectedDate = _currentBooking.StartTime;
             txtDuration.Text = _currentBooking.DurationMinutes == 0 ? "60" : _currentBooking.DurationMinutes.ToString();
 
-            // Установка значений для ComboBox со строками
             if (!_isNew)
             {
                 if (!string.IsNullOrEmpty(_currentBooking.PaymentMethod))
@@ -96,7 +88,6 @@ namespace BowlingClub.Pages
             UpdateItemsTable();
         }
 
-        // Вспомогательный метод для выбора элемента в ComboBox
         private void SelectComboBoxItem(ComboBox comboBox, string value)
         {
             if (comboBox.ItemsSource == null) return;
@@ -110,14 +101,11 @@ namespace BowlingClub.Pages
                 }
             }
 
-            // Если не нашли, пробуем установить текст
             comboBox.Text = value;
         }
 
-        // Метод загрузки всех справочников из БД
         private void LoadReferenceData()
         {
-            // Загрузка клиентов
             var clients = AppConnect.model.Clients.ToList();
             cbClient.ItemsSource = clients;
             cbClient.DisplayMemberPath = "FullName";
@@ -125,7 +113,6 @@ namespace BowlingClub.Pages
 
             System.Diagnostics.Debug.WriteLine($"Загружено клиентов: {clients.Count}");
 
-            // Загрузка дорожек
             var lanes = AppConnect.model.Lanes.ToList();
             cbLane.ItemsSource = lanes;
             cbLane.DisplayMemberPath = "LaneNumber";
@@ -133,7 +120,6 @@ namespace BowlingClub.Pages
 
             System.Diagnostics.Debug.WriteLine($"Загружено дорожек: {lanes.Count}");
 
-            // ВСЕГДА используем полный список статусов (не только из БД)
             var allStatuses = new List<string>
             {
                 "Создан",
@@ -141,14 +127,12 @@ namespace BowlingClub.Pages
                 "Отменен"
             };
 
-            // Добавляем статусы из БД, если есть какие-то дополнительные
             var dbStatuses = AppConnect.model.Bookings
                 .Where(b => b.Status != null && b.Status != "")
                 .Select(b => b.Status)
                 .Distinct()
                 .ToList();
 
-            // Объединяем списки, убирая дубликаты
             foreach (var status in dbStatuses)
             {
                 if (!allStatuses.Contains(status))
@@ -161,7 +145,6 @@ namespace BowlingClub.Pages
             System.Diagnostics.Debug.WriteLine($"Загружено статусов: {allStatuses.Count}");
             cbStatus.SelectedIndex = 0;
 
-            // ВСЕГДА используем полный список способов оплаты
             var allPaymentMethods = new List<string>
             {
                 "Наличные",
@@ -169,7 +152,6 @@ namespace BowlingClub.Pages
                 "Онлайн"
             };
 
-            // Добавляем способы оплаты из БД, если есть какие-то дополнительные
             var dbPaymentMethods = AppConnect.model.Bookings
                 .Where(b => b.PaymentMethod != null && b.PaymentMethod != "")
                 .Select(b => b.PaymentMethod)
@@ -195,14 +177,12 @@ namespace BowlingClub.Pages
             System.Diagnostics.Debug.WriteLine($"Загружено услуг: {_availableServices.Count}");
         }
 
-        // Автоматическая подстановка цены и управление полем "Кол-во"
         private void cbItemName_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (cbItemName.SelectedItem is BookingItems selectedService)
             {
                 txtItemPrice.Text = selectedService.Price.ToString("F2");
 
-                // ПРАВИЛО: Если аренда дорожек, то всегда 1 штука и блокируем поле
                 if (selectedService.ItemName.ToLower().Contains("дорожки"))
                 {
                     txtItemQty.Text = "1";
@@ -218,7 +198,6 @@ namespace BowlingClub.Pages
             }
         }
 
-        // Добавление услуги в таблицу чека
         private void AddItem_Click(object sender, RoutedEventArgs e)
         {
             lblError.Text = "";
@@ -252,7 +231,6 @@ namespace BowlingClub.Pages
             _itemsList.Add(newItem);
             UpdateItemsTable();
 
-            // Сброс полей ввода
             cbItemName.SelectedIndex = -1;
             txtItemQty.Text = "1";
             txtItemQty.IsReadOnly = false;
@@ -260,7 +238,6 @@ namespace BowlingClub.Pages
             txtItemPrice.Clear();
         }
 
-        // Обновление таблицы на экране и автоматический расчет TotalAmount
         private void UpdateItemsTable()
         {
             dgBookingItems.ItemsSource = null;
@@ -271,7 +248,6 @@ namespace BowlingClub.Pages
             lblTotalAmount.Text = sum.ToString("F2") + " руб.";
         }
 
-        // Логика удаления выбранной в таблице строки
         private void RemoveSelectedGridItem_Click(object sender, RoutedEventArgs e)
         {
             lblError.Text = "";
@@ -287,30 +263,22 @@ namespace BowlingClub.Pages
             }
         }
 
-        // Кнопка Сохранить данные в SQL базу данных
         private void Save_Click(object sender, RoutedEventArgs e)
         {
             lblError.Text = "";
 
-            // 1. ВАЛИДАЦИЯ
             if (!ValidateForm()) return;
-
-            // 2. ПЕРЕНОС ДАННЫХ ИЗ ИНТЕРФЕЙСА В СУЩНОСТЬ
             _currentBooking.BookingNumber = txtBookingNumber.Text;
             _currentBooking.ClientId = (int)cbClient.SelectedValue;
             _currentBooking.LaneId = (int)cbLane.SelectedValue;
             _currentBooking.StartTime = dpStartDate.SelectedDate.Value;
             _currentBooking.DurationMinutes = int.Parse(txtDuration.Text);
-
-            // Получаем строковые значения из ComboBox
             _currentBooking.PaymentMethod = cbPaymentMethod.SelectedItem?.ToString() ?? cbPaymentMethod.Text;
             _currentBooking.Status = cbStatus.SelectedItem?.ToString() ?? cbStatus.Text;
 
-            // 3. СОХРАНЕНИЕ В БД
             SaveToDatabase();
         }
 
-        // Валидация формы
         private bool ValidateForm()
         {
             if (string.IsNullOrWhiteSpace(txtBookingNumber.Text))
@@ -362,7 +330,6 @@ namespace BowlingClub.Pages
             return true;
         }
 
-        // Сохранение в базу данных
         private void SaveToDatabase()
         {
             try
@@ -374,7 +341,6 @@ namespace BowlingClub.Pages
                 }
                 else
                 {
-                    // Обновляем существующую бронь
                     var existingBooking = AppConnect.model.Bookings.Find(_currentBooking.Id);
                     if (existingBooking != null)
                     {
@@ -382,7 +348,6 @@ namespace BowlingClub.Pages
                         AppConnect.model.SaveChanges();
                     }
 
-                    // Удаляем старые услуги
                     var itemsToRemove = AppConnect.model.BookingItems
                         .Where(bi => bi.BookingId == _currentBooking.Id)
                         .ToList();
@@ -394,7 +359,6 @@ namespace BowlingClub.Pages
                     AppConnect.model.SaveChanges();
                 }
 
-                // Добавляем новые услуги
                 foreach (var item in _itemsList)
                 {
                     var dbItem = new BookingItems

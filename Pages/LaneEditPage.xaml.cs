@@ -20,9 +20,6 @@ using Path = System.IO.Path;
 
 namespace BowlingClub.Pages
 {
-    /// <summary>
-    /// Логика взаимодействия для LaneEditPage.xaml
-    /// </summary>
     public partial class LaneEditPage : Page
     {
         private Lanes _currentLane;
@@ -35,7 +32,7 @@ namespace BowlingClub.Pages
 
             try
             {
-                lblError.Text = ""; // Очищаем текст ошибки при инициализации
+                lblError.Text = ""; 
                 cbLaneType.ItemsSource = AppData.AppConnect.model.LaneTypes.ToList();
                 cbLaneStatus.ItemsSource = AppData.AppConnect.model.LaneStatuses.ToList();
             }
@@ -73,7 +70,6 @@ namespace BowlingClub.Pages
                 cbLaneType.SelectedValue = _currentLane.LaneTypeId;
                 cbLaneStatus.SelectedValue = _currentLane.StatusId;
 
-                // Умная загрузка фото дорожки
                 if (!string.IsNullOrEmpty(_currentLane.Photo))
                 {
                     try
@@ -81,14 +77,11 @@ namespace BowlingClub.Pages
                         string cleanPath = _currentLane.Photo.TrimStart('/');
                         string fullPath = "";
 
-                        // Вариант 1: Проверяем в рабочей папке сборки (bin/Debug)
                         string pathInDebug = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, cleanPath);
 
-                        // Вариант 2: Проверяем в корне самого проекта (шаг назад из bin/Debug)
                         string projectRoot = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)?.Parent?.Parent?.FullName ?? "";
                         string pathInProject = Path.Combine(projectRoot, cleanPath);
 
-                        // Выбираем тот путь, где файл реально существует
                         if (File.Exists(pathInDebug))
                         {
                             fullPath = pathInDebug;
@@ -98,12 +91,11 @@ namespace BowlingClub.Pages
                             fullPath = pathInProject;
                         }
 
-                        // Если файл нашли — отображаем его
                         if (!string.IsNullOrEmpty(fullPath))
                         {
                             BitmapImage bitmap = new BitmapImage();
                             bitmap.BeginInit();
-                            bitmap.CacheOption = BitmapCacheOption.OnLoad; // Освобождает файл, чтобы избежать зависаний
+                            bitmap.CacheOption = BitmapCacheOption.OnLoad;
                             bitmap.UriSource = new Uri(fullPath);
                             bitmap.EndInit();
 
@@ -111,7 +103,6 @@ namespace BowlingClub.Pages
                         }
                         else
                         {
-                            // Если нигде не нашли, пишем в лог ошибок (для отладки)
                             lblError.Text = $"Файл не найден на диске. Путь в БД: {_currentLane.Photo}";
                         }
                     }
@@ -136,14 +127,13 @@ namespace BowlingClub.Pages
 
                 try
                 {
-                    // МГНОВЕННЫЙ ПОКАЗ ВЫБРАННОЙ КАРТИНКИ НА ЭКРАНЕ
                     BitmapImage bitmap = new BitmapImage();
                     bitmap.BeginInit();
                     bitmap.CacheOption = BitmapCacheOption.OnLoad;
                     bitmap.UriSource = new Uri(_selectedImagePath);
                     bitmap.EndInit();
 
-                    imgLane.Source = bitmap; // Картинка сразу появится в рамке на форме
+                    imgLane.Source = bitmap;
                 }
                 catch (Exception ex)
                 {
@@ -155,9 +145,8 @@ namespace BowlingClub.Pages
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            lblError.Text = ""; // Очищаем блок перед проверкой
+            lblError.Text = "";
 
-            // 1. Валидация полей через вывод в lblError
             if (!int.TryParse(txtLaneNumber.Text, out int laneNumber))
             {
                 lblError.Text = "Номер дорожки должен быть целым числом.";
@@ -184,7 +173,6 @@ namespace BowlingClub.Pages
                 return;
             }
 
-            // 2. Обработка фотографии
             if (_selectedImagePath != null)
             {
                 try
@@ -209,14 +197,12 @@ namespace BowlingClub.Pages
                 }
             }
 
-            // 3. Перенос данных в сущность
             _currentLane.LaneNumber = laneNumber;
             _currentLane.Capacity = capacity;
             _currentLane.PricePerHour = price;
             _currentLane.LaneTypeId = (int)cbLaneType.SelectedValue;
             _currentLane.StatusId = (int)cbLaneStatus.SelectedValue;
 
-            // 4. Сохранение в БД
             try
             {
                 if (_isNew)
@@ -225,7 +211,7 @@ namespace BowlingClub.Pages
                 }
 
                 AppData.AppConnect.model.SaveChanges();
-                MessageBox.Show("Данные успешно сохранены!"); // Информационное окно об успехе можно оставить
+                MessageBox.Show("Данные успешно сохранены!");
                 NavigationService.GoBack();
             }
             catch (Exception ex)

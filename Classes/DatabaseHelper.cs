@@ -1,10 +1,14 @@
 ﻿using BowlingClub.AppData;
+using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.SqlServer;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.IO;
 
 namespace BowlingClub.Database
 {
@@ -68,6 +72,61 @@ namespace BowlingClub.Database
             }
         }
 
+        public static void Export<T>(IEnumerable<T> items, string defaultFileName)
+        {
+            if (items == null) return;
+
+            SaveFileDialog dlg = new SaveFileDialog
+            {
+                Filter = "CSV файлы (*.csv)|*.csv",
+                FileName = defaultFileName
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    StringBuilder sb = new StringBuilder();
+                    var props = typeof(T).GetProperties();
+
+                    // 1. Заголовки (названия свойств вашей модели)
+                    List<string> headers = new List<string>();
+                    foreach (var p in props) headers.Add($"\"{p.Name}\"");
+                    sb.AppendLine(string.Join(";", headers));
+
+                    // 2. Строки данных
+                    foreach (var item in items)
+                    {
+                        List<string> cells = new List<string>();
+                        foreach (var p in props)
+                        {
+                            var val = p.GetValue(item, null);
+                            string str = val != null ? val.ToString() : "";
+
+                            if (val is DateTime dt)
+                            {
+                                str = dt.ToString("dd.MM.yyyy HH:mm");
+                            }
+
+                            // Вот эта строка без сложных интерполяций, ломающих компилятор:
+                            string cleanStr = str.Replace("\"", "\"\"");
+                            cells.Add("\"" + cleanStr + "\"");
+                        }
+                        sb.AppendLine(string.Join(";", cells));
+                    }
+
+
+                    // Запись с BOM-маркером (гарантирует, что русский текст в Excel не превратится в кракозябры)
+                    File.WriteAllText(dlg.FileName, sb.ToString(), new UTF8Encoding(true));
+
+                        MessageBox.Show("Данные успешно сохранены!", "Экспорт", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+            catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка экспорта: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
 
         public static string GetClientsList(Events ev)
         {

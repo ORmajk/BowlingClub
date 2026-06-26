@@ -9,12 +9,10 @@
       Title="EventEditPage">
 
     <Grid Background="#1E1E1E">
-        <!-- Карточка формы в точном стиле вашего Login -->
         <Border Width="480" Height="680" Padding="20" Background="#2A2A2A" CornerRadius="10"
                 VerticalAlignment="Center" HorizontalAlignment="Center">
             <StackPanel>
 
-                <!-- Заголовок страницы -->
                 <TextBlock x:Name="tbTitle" 
                                Text="Добавление игры" 
                                FontSize="26" 
@@ -22,23 +20,18 @@
                                HorizontalAlignment="Center" 
                                Margin="0,0,0,20"/>
 
-                <!-- Поле: Название -->
                 <TextBlock Text="Название игры" Foreground="White" Margin="0,0,0,5"/>
                 <TextBox x:Name="txtEventName" Height="35" FontSize="18" Padding="3" Margin="0,0,0,15"/>
 
-                <!-- Поле: Дата -->
                 <TextBlock Text="Дата проведения" Foreground="White" Margin="0,0,0,5"/>
                 <DatePicker x:Name="dpEventDate" Height="35" FontSize="18" Margin="0,0,0,15"/>
 
-                <!-- Поле: Дорожка -->
                 <TextBlock Text="Номер дорожки" Foreground="White" Margin="0,0,0,5"/>
                 <ComboBox x:Name="cbLane" Height="35" FontSize="18" Margin="0,0,0,15" DisplayMemberPath="LaneNumber" SelectedValuePath="Id"/>
 
-                <!-- Поле: Описание -->
                 <TextBlock Text="Описание" Foreground="White" Margin="0,0,0,5"/>
                 <TextBox x:Name="txtDescription" Height="70" FontSize="16" Padding="3" Margin="0,0,0,15" TextWrapping="Wrap" AcceptsReturn="True"/>
 
-                <!-- Поле: Выбор участников (Клиентов) -->
                 <TextBlock Text="Записанные клиенты" Foreground="White" Margin="0,0,0,5"/>
                 <Border BorderThickness="1" BorderBrush="#444444" CornerRadius="5" Height="110" Margin="0,0,0,20" Background="#1E1E1E">
                     <ListBox x:Name="lbClients" Background="Transparent" BorderThickness="0" ScrollViewer.VerticalScrollBarVisibility="Auto">
@@ -54,7 +47,6 @@
                     </ListBox>
                 </Border>
 
-                <!-- Кнопка: Сохранить -->
                 <Button Content="Сохранить" 
                             Height="40" 
                             Background="#3A8DFF" 
@@ -63,7 +55,6 @@
                             Margin="0,0,0,10" 
                             Click="Save_Click"/>
 
-                <!-- Кнопка: Отмена -->
                 <Button Content="Отмена" 
                             Height="40" 
                             Background="#444444" 
@@ -71,7 +62,6 @@
                             FontWeight="Bold" 
                             Click="Cancel_Click"/>
 
-                <!-- ПОЛЕ ВЫВОДА ОШИБОК (в точном стиле Login) -->
                 <TextBlock x:Name="lblError" 
                                Foreground="OrangeRed" 
                                FontSize="14" 

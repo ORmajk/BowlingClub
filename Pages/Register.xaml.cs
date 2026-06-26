@@ -72,8 +72,7 @@ namespace BowlingClub.Pages
 
                 lblSuccess.Text = "Регистрация прошла успешно. Перенаправление на вход...";
                 _db.LogAction(user.Id, "Регистрация", $"Пользователь {login} зарегистрирован");
-
-                // Переход на страницу входа через короткую задержку
+                
                 var nav = NavigationService;
                 if (nav != null)
                 {

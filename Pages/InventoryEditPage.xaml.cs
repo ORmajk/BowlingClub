@@ -16,9 +16,6 @@ using System.Windows.Shapes;
 
 namespace BowlingClub.Pages
 {
-    /// <summary>
-    /// Логика взаимодействия для InventoryEditPage.xaml
-    /// </summary>
     public partial class InventoryEditPage : Page
     {
         private InventoryItems _currentItem;
@@ -28,7 +25,7 @@ namespace BowlingClub.Pages
         {
             InitializeComponent();
 
-            // Загрузка статусов инвентаря в ComboBox из БД
+            
             try
             {
                 lblError.Text = "";
@@ -39,11 +36,10 @@ namespace BowlingClub.Pages
                 lblError.Text = $"Ошибка загрузки статусов: {ex.Message}";
             }
 
-            // Определение режима: Добавление или Редактирование
             if (selectedItem == null)
             {
                 _currentItem = new InventoryItems();
-                _currentItem.CreatedAt = DateTime.Now; // Заполняем обязательную дату создания
+                _currentItem.CreatedAt = DateTime.Now;
                 _isNew = true;
                 tbTitle.Text = "Добавление инвентаря";
             }
@@ -54,7 +50,6 @@ namespace BowlingClub.Pages
                 tbTitle.Text = "Редактирование инвентаря";
             }
 
-            // Заполнение полей данными
             txtItemName.Text = _currentItem.Name;
             txtType.Text = _currentItem.Type;
             txtSizeOrWeight.Text = _currentItem.SizeOrWeight;
@@ -64,9 +59,8 @@ namespace BowlingClub.Pages
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            lblError.Text = ""; // Сброс ошибок перед валидацией
+            lblError.Text = "";
 
-            // 1. Валидация полей через текстовый блок ошибок
             if (string.IsNullOrWhiteSpace(txtItemName.Text))
             {
                 lblError.Text = "Ошибка: Введите название инвентаря.";
@@ -88,14 +82,12 @@ namespace BowlingClub.Pages
                 return;
             }
 
-            // 2. Перенос данных с формы в сущность
             _currentItem.Name = txtItemName.Text;
             _currentItem.Type = txtType.Text;
             _currentItem.SizeOrWeight = txtSizeOrWeight.Text;
             _currentItem.Quantity = quantity;
             _currentItem.StatusId = (int)cbStatus.SelectedValue;
 
-            // 3. Сохранение изменений в базу данных через ADO.NET
             try
             {
                 if (_isNew)

@@ -9,13 +9,11 @@
       Title="ClientEditPage">
 
     <Grid Background="#1E1E1E">
-        <!-- Карточка в стиле формы Login -->
         <Border Width="480" Height="580" Padding="20" Background="#2A2A2A" CornerRadius="10"
                 VerticalAlignment="Center" HorizontalAlignment="Center">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel>
 
-                    <!-- Заголовок страницы -->
                     <TextBlock x:Name="tbTitle" 
                                Text="Добавление клиента" 
                                FontSize="26" 
@@ -23,7 +21,6 @@
                                HorizontalAlignment="Center" 
                                Margin="0,0,0,20"/>
 
-                    <!-- Поле: ФИО -->
                     <TextBlock Text="ФИО Клиента" Foreground="White" Margin="0,0,0,5"/>
                     <TextBox x:Name="txtFullName" Height="35" FontSize="18" Padding="3" Margin="0,0,0,15"/>
 
@@ -31,15 +28,12 @@
                     <TextBlock Text="Номер телефона" Foreground="White" Margin="0,0,0,5"/>
                     <TextBox x:Name="txtPhone" Height="35" FontSize="18" Padding="3" Margin="0,0,0,15"/>
 
-                    <!-- Поле: Email -->
                     <TextBlock Text="Электронная почта (Email)" Foreground="White" Margin="0,0,0,5"/>
                     <TextBox x:Name="txtEmail" Height="35" FontSize="18" Padding="3" Margin="0,0,0,15"/>
 
-                    <!-- Поле: Баллы -->
                     <TextBlock Text="Бонусные баллы" Foreground="White" Margin="0,0,0,5"/>
                     <TextBox x:Name="txtPoints" Height="35" FontSize="18" Padding="3" Margin="0,0,0,20"/>
 
-                    <!-- Поле: Галочка подписки (Новый элемент в стиле) -->
                     <CheckBox x:Name="chbSubscribed" 
                               Content="Подписка на рассылку ИИ" 
                               Foreground="White" 
@@ -47,7 +41,6 @@
                               Margin="0,0,0,25" 
                               VerticalContentAlignment="Center"/>
 
-                    <!-- Кнопка: Сохранить -->
                     <Button Content="Сохранить" 
                             Height="40" 
                             Background="#3A8DFF" 
@@ -56,7 +49,6 @@
                             Margin="0,0,0,10" 
                             Click="Save_Click"/>
 
-                    <!-- Кнопка: Отмена -->
                     <Button Content="Отмена" 
                             Height="40" 
                             Background="#444444" 
@@ -64,7 +56,6 @@
                             FontWeight="Bold" 
                             Click="Cancel_Click"/>
 
-                    <!-- ПОЛЕ ВЫВОДА ОШИБОК -->
                     <TextBlock x:Name="lblError" 
                                Foreground="OrangeRed" 
                                FontSize="14" 
